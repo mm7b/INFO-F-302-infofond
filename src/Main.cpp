@@ -112,10 +112,10 @@ OrthogonalPackingData input_reader(bool three_dim = false){
         std::getline(std::cin, input_line);
         int index = next_int(input_line);
         if(index != i + 1) { throw ParseException("Wrong index : expected " + std::to_string(i + 1) + ", got " + std::to_string(index)); }
-        int n = next_int(input_line);
         int m = next_int(input_line);
+        int n = next_int(input_line);
         int h = three_dim ? next_int(input_line) : -1;
-        data.rects[i - 1] = new Rectangle(n, m, h, index);
+        data.rects[i] = new Rectangle(n, m, h, index);
     }
     return data;
 }
@@ -125,6 +125,9 @@ int main() {
     try{
         OrthogonalPackingData data(input_reader());
         data.container_rect->print();
+        for(int i = 0 ; i < data.k ; ++i){
+            data.rects[i]->print();
+        }
         return 0;
     }catch(const std::exception& e){
         std::cout << e.what() << std::endl;
