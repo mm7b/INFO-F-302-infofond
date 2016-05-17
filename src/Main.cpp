@@ -1,11 +1,12 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <utility>
 #include <exception>
 #include <stdexcept>
 #include <cctype>
 #include <stdlib.h>
+#include <algorithm>
+
 #include "Solver.hpp"
 
 template<typename T>
@@ -15,173 +16,143 @@ std::string to_string(const T& value){
     return oss.str();
 }
 
-class ParseException : public std::logic_error {
-public:
-    ParseException(const std::string& msg) : std::logic_error(msg) {}
-};
+struct OrthogonalPackingSolver : public Solver {
 
-struct Rectangle {
-    int length, width, height, index;
+    OrthogonalPackingProblem problem;
 
-    Rectangle() : length(-1), width(-1), height(-1), index(-1) {}
-    Rectangle(int n, int m, int h, int i) : length(m), width(n), height(h), index(i) {}
+    OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : Solver(), problem(p) {
+        add_constraints();
 
-    void print() { std::cout << index << " " << length << " " << width << (height != -1 ? to_string(height) : ""); }
-};
-
-struct Square : public Rectangle{
-    Square() : Rectangle() {}
-    Square(int n, int i) : Rectangle(n, n, n, i) {}
-};
-
-struct OrthogonalPacking{
-    int k;
-    int dim;
-    Rectangle* container_rect;
-    Rectangle** rects;
-
-    OrthogonalPacking(int parsed_k) : k(parsed_k) {
-        container_rect = NULL;
-        rects = new Rectangle*[k];
-        for(int i = 0; i < k; ++i){
-            rects[i] = NULL;
-        }
     }
 
-    OrthogonalPacking(const OrthogonalPacking& other) : k(other.k), dim(other.dim) {
-        container_rect = new Rectangle(*(other.container_rect));
-        rects = new Rectangle*[k];
-        for(int i = 0; i < k; ++i){
-            rects[i] = (other.rects[i] == NULL) ? NULL : new Rectangle(*(other.rects[i]));
+    void add_constraints(){
+        vec<Lit> lits;
+        int mu[problem.k][problem.n][problem.m];
+
+        /* On ne peut avoir 2 mu à vrai en même temps pour un même k, 
+        un rectangle k ne pouvant avoir qu'une seule position */
+        for(int k = 0; k < problem.k; ++k){
+            for(int n = 0; n < problem.n; ++n){
+                for(int m = 0; m < problem.m; ++m){
+                    for(int i = n + 1; i < problem.n; ++i){
+                        for(int j = m + 1; j < problem.m; ++j){
+                            addBinary(~Lit(mu[k][n][m]), ~Lit(mu[k][i][j]));
+                        }
+                    }
+                }
+            }
         }
+
+        /* On doit avoir au mois 1 mu à vrai pour un rectangle k donné  */
+        for(int k = 0; k < problem.k; ++k){
+            lits.clear();
+             for(int n = 0; n < problem.n; ++n){
+                for(int m = 0; m < problem.m; ++m){
+                    lits.push(mu[k][n][m]);
+                }
+            }
+            addClause(lits);
+        }
+
+        /* Pas de superposition : un rectangle est soit à gauche, soit à droite, 
+        soit en haut, soit en bas, soit plus profond, soit moins profond que tous les autres */
     }
 
-    OrthogonalPacking& operator=(const OrthogonalPacking& other){
+    void print_solution(std::wstream& out = std::cout){
+        out << "slt sa va??";
+    }
+};
+
+struct OrthogonalPackingProblem{
+    int k, dim, n, m, h;
+    int* lengths, widths, heights;
+
+    OrthogonalPackingProblem(int parsed_k, int parsed_dim, int parsed_n, int parsed_m, int parsed_h) : 
+        k(parsed_k), dim(parsed_dim), n(parsed_n), m(parsed_m), h(parsed_h),
+        lengths(new int[k]), widths(new int[k]), heights(new int[k]) {}
+
+    OrthogonalPackingProblem(const OrthogonalPackingProblem& other) : 
+        k(other.k), dim(other.dim), n(other.n), m(other.m), h(parsed_h),
+        lengths(new int[k]), widths(new int[k]), heights(new int[k]) {
+            std::copy(other.lengths, other.lengths + k, lengths);
+            std::copy(other.widths, other.widths + k, widths);
+            std::copy(other.heights, other.heights + k, heights);
+    }
+
+    OrthogonalPackingProblem& operator=(const OrthogonalPackingProblem& other){
         if(this != &other){
-            k = other.k; dim = other.dim;
-
-            delete container_rect;
-            container_rect = new Rectangle(*(other.container_rect));
-            
-            for(int i = 0; i < k; ++i){
-                if(rects[i] != NULL) { delete rects[i]; }
-            }
-            delete[] rects;
-
-            rects = new Rectangle*[k];
-            for(int i = 0; i < k; ++i){
-                rects[i] = (other.rects[i] == NULL) ? NULL : new Rectangle(*(other.rects[i]));
-            }
+            k = other.k; dim = other.dim; n = other.n; m = other.m; h = other.h;
+            delete[] lengths; delete[] widths; delete[] heights;
+            lengths = new int[k]; widths = new int[k]; heights = new int[k];
+            std::copy(other.lengths, other.lengths + k, lengths);
+            std::copy(other.widths, other.widths + k, widths);
+            std::copy(other.heights, other.heights + k, heights);
         }
         return *this;
     }
 
-    ~OrthogonalPacking(){
-        if(container_rect != NULL) { delete container_rect; }
-        for(int i = 0; i < k; ++i){
-            if(rects[i] != NULL) { delete rects[i]; }
+    ~OrthogonalPackingProblem(){
+        delete[] lengths;
+        delete[] widths;
+        delete[] heights;
+    }
+
+
+    struct Parser{
+        struct ParseException : public std::runtime_error {
+            ParseException(const std::string& msg) : std::runtime_error(msg) {}
+        };
+
+        inline static int next_int(std::string& line){
+            std::size_t i = 0;
+            std::string digit = "";
+            while(i < line.length() && isdigit(line[i])){
+                digit += line[i];
+                ++i; 
+            }
+            if(i == 0){ throw ParseException("Could not read int from : " + line); }
+
+            line = (++i < line.length()) ? line.substr(i, line.length() - i) : "";
+            return atoi(digit.c_str());
         }
-        delete[] rects;
-    }
 
+        inline static OrthogonalPackingProblem parse(std::istream& in, bool three_dim = false){
+            int dim = three_dim ? 3 : 2;
+            std::string input_line;
+            std::getline(in, input_line);
+            int k = next_int(input_line);
+            std::getline(in, input_line);
+            int n = next_int(input_line);
+            std::getline(in, input_line);
+            int m = next_int(input_line);
+            int h = -1;
+            if(three_dim){
+                std::getline(in, input_line);
+                h = next_int(input_line);
+            }
+            OrthogonalPackingProblem problem(k, dim, n, m, h);
+            for(int i = 0; i < k; ++i){
+                std::getline(in, input_line);
+                int index = next_int(input_line);
+                if(index != i + 1) { throw ParseException("Wrong index : expected " + to_string(i + 1) + " found " + to_string(index) + " instead"); }
+                problem.lengths[i] = next_int(input_line);
+                problem.widths[i] = next_int(input_line);   
+                problem.heights[i] = three_dim ? next_int(input_line) : -1;
+            }
+            return problem;
+        }
+    };
 };
-
-int next_int(std::string& line){
-    std::size_t i = 0;
-    std::string digit = "";
-    while(i < line.length() && isdigit(line[i])){
-        digit += line[i];
-        ++i; 
-    }
-    if(i == 0){ throw ParseException("Could not read int from : " + line); }
-
-    line = (++i < line.length()) ? line.substr(i, line.length() - i) : "";
-    return atoi(digit.c_str());
-}
-
-OrthogonalPacking input_reader(bool three_dim = false){
-    std::string input_line;
-    std::getline(std::cin, input_line);
-    int k = next_int(input_line);
-    std::getline(std::cin, input_line);
-    int n = next_int(input_line);
-    std::getline(std::cin, input_line);
-    int m = next_int(input_line);
-    int h = -1;
-    if(three_dim){
-        std::getline(std::cin, input_line);
-        h = next_int(input_line);
-    }
-    OrthogonalPacking data(k);
-    data.container_rect = new Rectangle(n, m, h, 0);
-    for(int i = 0; i < k; ++i){
-        std::getline(std::cin, input_line);
-        int index = next_int(input_line);
-        if(index != i + 1) { throw ParseException("Wrong index : expected " + to_string(i + 1) + " found " + to_string(index) + " instead"); }
-        int m = next_int(input_line);
-        int n = next_int(input_line);   
-        int h = three_dim ? next_int(input_line) : -1;
-        data.rects[i] = new Rectangle(n, m, h, index);
-    }
-    return data;
-}
-
 
 int main() {
     try{
-        OrthogonalPacking data(input_reader());
-        data.container_rect->print();
-        for(int i = 0 ; i < data.k ; ++i){
-            data.rects[i]->print();
-        }
+        OrthogonalPackingSolver solver(OrthogonalPackingProblem::Parser::parse(std::cin));
+        solver.solve();
+        solver.print_solution();
         return 0;
-    }catch(const std::exception& e){
+    } catch(const std::exception& e){
         std::cout << e.what() << std::endl;
         return 1;
     }
 }
 
-/*
-int main() {
-    Solver s;
-    vec<Lit> lits;
-
-    int X, Y, K;
-    istream & input = cin;
-    next_int(input, K, "Nombre de rectangles");
-    next_int(input, X, "Largeur");
-    next_int(input, Y, "Longueur");
-
-    FOR(r, 1, K){
-
-    }
-
-
-    // exemple si le R est de taille 6-7-1 (2D quoi)
-    int prop[X][Y][1];
-
-    FOR(x,1,X-1){
-        FOR(y,1,Y-1){
-            FOR(z, 1,1){
-                prop[x][y][z] = s.newVar();
-            }
-        }
-    }
-
-    //ajout des contraintes
-
-
-    
-    // call the SAT solver
-    s.solve();
-
-    // récupération de la solution
-    while (s.okay()) {
-        lits.clear();
-        cout << "Nouvelle solution: \n\n" ;
-        s.addClause(lits);
-        s.solve();
-    }
-    cout << "Il n'y a plus de solutions\n";
-}
-*/
