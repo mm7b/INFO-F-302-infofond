@@ -1,0 +1,106 @@
+% !TEX encoding = UTF-8 Unicode
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage[nonumberlist]{glossaries}
+\usepackage{amssymb,amsmath}
+
+\title{{\textsc{INFO-F-302} : Informatique Fondamentale} \\ Projet - Rapport}
+\author{Jérôme \textsc{Hellinckx} \\ Thomas \textsc{Herman}}
+
+\begin{document}
+\renewcommand{\labelitemi}{$\bullet$}
+
+\maketitle
+
+\section{Le problème}
+Le problème de base consiste à essayer d'enchâsser un ensemble de rectangles dans la surface d'un grand rectangle. Ce problème se complexifie au fil des questions posées. 
+
+\section{Définitions}
+Quelques termes et notations utilisés dans ce rapport : 
+\begin{itemize}
+	\item \textit{largeur}, la dimension verticale d'un rectangle ;
+	\item \textit{longueur}, la dimension horizontale d'un rectangle ;
+	\item $R$ le grand rectangle dans lequel les autres rectangles doivent être enchâssés ;
+	\item $ n,m \in \mathbb{N}_{>0} $ la largeur et longueur du rectangle $R$ ;
+	\item l'ensemble $K = \{r_1,\dots ,r_k\}$ de $k$ rectangles $r$ plus petits que $R$ ;
+	\item $\mathcal{X}:\{1,\dots,k\} \mapsto \mathbb{N}_{>0} $, fonction nous donnant la longueur d'un rectangle ;
+	\item $\mathcal{Y}:\{1,\dots,k\} \mapsto \mathbb{N}_{>0} $, fonction nous donnant la largeur d'un rectangle ;
+	\item $\mu :\{1,\dots,k\} \mapsto \{1,\dots,m\}\times\{1,\dots,n\}$ fonction d'assignation d'un rectangle à une position contenue dans $R$ tel que si $\mu(i) \mapsto (a,b)$ alors les sommets du rectangle $r_i$ sont $(a,b), (a,\mathcal{Y}(i)+b), (\mathcal{X}(i)+a,\mathcal{Y}(i)+b), (\mathcal{X}(i)+a,b)$.\\
+	
+	
+\end{itemize}
+
+
+Variables booléennes utilisées :
+\begin{itemize}
+	\item $\gamma_{x,y}$, vrai ssi $x \geq y$ avec $x,y \in \mathbb{N}$
+	\item $\xi_{x,y}$, vrai ssi $x \leq y$ avec $x,y \in \mathbb{N}$
+ 	\item $\lambda_{x,y}$ vrai ssi $x \neq y$ avec $x,y \in \mathbb{N}$
+	
+\end{itemize}
+\section{Questions}
+\subsection{Écrire en langage mathématique les contraintes que doit satisfaire $\mu$ permettant de dire si $\mu$ est correcte}
+\begin{enumerate}
+	\item $\forall i \in \{1,\dots, k\}, \mu(i) \mapsto (a,b) :  a \geq 0$
+	\item $\forall i \in \{1,\dots, k\}, \mu(i) \mapsto (a,b) :  a + \mathcal{X}(i) \leq m $
+	\item $\forall i \in \{1,\dots, k\}, \mu(i) \mapsto (a,b) :  b \geq 0$
+	\item $\forall i \in \{1,\dots, k\}, \mu(i) \mapsto (a,b) :  b + \mathcal{Y}(i) \leq n $
+	\item $\forall i, j \in \{1,\dots, k\}, \mu(i) \mapsto (a, b),  \mu(j) \mapsto (e,f) :  i \neq j \rightarrow a + \mathcal{X}(i) \leq e \lor a \geq e +\mathcal{X}(j) \lor b + \mathcal{Y}(i) \leq f \lor b \geq f + \mathcal{Y}(j) $
+\end{enumerate}
+
+\newpage
+\subsection{Construire une formule $\Phi$ en FNC de la logique propositionnelle}
+Notons que les notations $(a, b)$ et $(e, f)$ utilisées sont les mêmes que précédemment :
+\\
+\begin{enumerate}
+\item $C_1 = \bigwedge\limits_{i\in K} \gamma_{a, 0}$ 
+\item $C_2 = \bigwedge\limits_{i\in K} \xi_{a + \mathcal{X}(i), m}$ 
+\item $C_3 = \bigwedge\limits_{i\in K} \gamma_{b, 0}$ 
+\item $C_4 = \bigwedge\limits_{i\in K} \xi_{b + \mathcal{Y}(i), n}$ 
+\item $C_5 = \bigwedge\limits_{i\in K}\bigwedge\limits_{j\in K} \lnot \delta_{i,j} \lor (\xi_{a + \mathcal{X}(i), e} \lor \gamma_{a, e +\mathcal{X}(j)} \lor \xi_{b + \mathcal{Y}(i), f} \lor \gamma_{b, f + \mathcal{Y}(j)})$ 
+\end{enumerate}
+La mise en FNC complète de $\Phi$ est donc
+\begin{equation*}
+ \bigwedge\limits_{i\in K} \bigg[ \bigwedge\limits_{j\in K} \Big[ \lnot \delta_{i,j} \lor \xi_{a + \mathcal{X}(i), c} \lor \gamma_{a, c +\mathcal{X}(j)} \lor \xi_{b + \mathcal{Y}(i), d} \lor \gamma_{b, d + \mathcal{Y}(j)} \Big] \land \gamma_{a, 0} \land  \xi_{a + \mathcal{X}(i), m} \land \gamma_{b, 0} \land \xi_{b + \mathcal{Y}(i), n} \bigg]
+\end{equation*}
+
+\subsection{Implémentation et tests}
+Montrer des résultats, expliquer l'implémentation vite fait
+\subsection{Calculer la plus petite dimension du carré $R$ admettant une solution}
+Est-ce qu'on reçoit un $n$ en entrée ? Si oui, recherche dichotomique, si non on prend n = dim r1 +dim r2 tel que r1 et r2 sont les plus grands rectangles de K ? 
+\subsection{Calculer la plus petite dimension du carré $R$ avec $r_i$ de dimension $i\times i \ \forall i \leq n$}
+Même chose que question précédente ... 
+\subsection{Ajout d'une troisième dimension}
+Par soucis de compréhension, notons tout d'abord le développement de la fonction d'assignation $\mu :\{1,\dots,k\} \mapsto \{1,\dots,m\}\times\{1,\dots,n\}\times\{1,\dots,h\}$ et donc nous utiliserons $\mu(i) \mapsto (a, b, c)$ et $ \mu(j) \mapsto (d, e, f)$.
+Nous appliquons ensuite le même raisonnement que celui utilisé pour déterminer les contraintes en deux dimensions. Nous considérons dans un premier temps la contrainte triviale qui sert à border la hauteur des rectangles $\{r_1,\dots ,r_k\}$ entre $0$ et la hauteur $h$ de $R$ :
+\begin{equation*}
+\begin{split}
+	&C_6 = \bigwedge\limits_{i\in K} \gamma_{c, 0}\\
+	&C_7 = \bigwedge\limits_{i\in K} \xi_{c + \mathcal{Z}(i), h}
+\end{split}
+\end{equation*}
+Dans un second temps, nous adaptons $C_5$ définie lors de la construction de $\Phi$ précédente en remarquant que si un rectangle $r_1$ se trouve \textit{plus haut} ou \textit{plus bas} qu'un rectangle $r_2$, $r_1$ et $r_2$ ne se superposent pas. Répétons que cette observation est directement déduite de $C_5$ qui devient alors :
+\begin{equation*}
+	C_5 = \bigwedge\limits_{i\in K}\bigwedge\limits_{j\in K} \lnot \delta_{i,j} \lor \xi_{a + \mathcal{X}(i), e} \lor \gamma_{a, e +\mathcal{X}(j)} \lor \xi_{b + \mathcal{Y}(i), f} \lor \gamma_{b, f + \mathcal{Y}(j)} \lor \xi_{c + \mathcal{Z}(i), g} \lor \gamma_{c, g +\mathcal{Z}(j)}
+\end{equation*}
+\subsection{Ajout de contraintes qui ne fassent pas flotter les parallélépipèdes}
+Pour qu'un parallélépipède $i$ ne flotte pas, il faut que sa composante $c$ assignée par $\mu(i) \mapsto (a,b,c)$ vale soit $0$, soit $g + \mathcal{Z}(j)$ où $j$ est un autre parallélépipède qui lui ne flotte pas et $g$ la composante $g$ de $j$ assignée par $\mu(j) \mapsto (e,f,g)$ :
+\begin{equation*}
+	C_8 =  \bigwedge\limits_{i\in K} \bigg[ \bigvee\limits_{j\in K}\Big[ \lnot \delta_{c, g + \mathcal{Z}(j)} \Big] \lor \lnot \delta_{c, 0} \bigg]
+\end{equation*}
+\subsection{Solution avec pivot}
+\subsection{Minimum de $p$ unités de contact entre les rectangles et les bords de $R$}
+Il est nécessaire de d'abord déterminer si un rectangle $r_i$ touche un des bords du rectangle $R$, c'est-à-dire si un de ses côtés touche un bord de $R$. Nous obtenons donc que $r_i$ touche $R$ si  $\forall i \in \{1,\dots, k\}, \mu(i) \mapsto (a,b) :  (a = 0) (\lor a+ \mathcal{X}(i) = m) \lor (b = 0) \lor (b + \mathcal{Y}(i) = n)$. Il faut ensuite faire le somme de chaque côté de $r_i$ qui touche un bord de $R$ (si nous posons qu'une unité $p$ vaut $1$). Pour traduire cette contrainte en FNC, nous définissons la variable $\omega_{i,p}$ qui est vrai ssi les rectangles $\{r_1,\dots ,r_i\} \subseteq K$ au minimum $p$ unités de contact avec les bords de R : 
+\begin{equation*}
+C_9 =  \bigwedge\limits_{i\in K} 
+\end{equation*}
+
+\subsection{Utilisation du mode \textsc{MAX-SAT} pour maximiser le contact entre rectangles et les bords de $R$}
+
+\end{document}
