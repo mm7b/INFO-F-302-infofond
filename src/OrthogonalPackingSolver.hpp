@@ -110,14 +110,14 @@ struct OrthogonalPackingProblem{
                 problem.widths[i] = next_int(input_line);   
                 problem.heights[i] = three_dim ? next_int(input_line) : -1;
             }
-            std::cout << "PARSED : " << std::endl;
-            problem.print(); 
             return problem;
         }
     };
 };
 
 struct OrthogonalPackingSolution {
+    static const std::string PYTHON_PLOTTER_FILENAME;
+
     OrthogonalPackingProblem problem;
     int** solution;
     bool exists;

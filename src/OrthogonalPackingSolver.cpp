@@ -1,6 +1,11 @@
 #include <cctype>
 #include <algorithm>
+#include <stdlib.h>
+#include <sstream>
+#include <string>
 #include "OrthogonalPackingSolver.hpp"
+
+const std::string OrthogonalPackingSolution::PYTHON_PLOTTER_FILENAME = "plot_opp.py";
 
 OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : Solver(), problem(p), mu(NULL) {
 
@@ -127,6 +132,48 @@ OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
 
 void OrthogonalPackingSolver::plot_solution(){
     OrthogonalPackingSolution sol = get_solution();
+    std::ostringstream oss;
+    oss << "python " << OrthogonalPackingSolution::PYTHON_PLOTTER_FILENAME << " " << problem.k << " " << problem.n << " " 
+        << problem.m << " " << problem.h;
+
+    oss << " \"[";
+    for(int k = 0; k < problem.k; ++k){
+        oss << "(";
+        for(int d = 0; d < problem.dim; ++d){
+            oss << (d == problem.dim - 1 ? to_string(sol[k][d]) + ")" : to_string(sol[k][d]) + ", ");
+        }
+        if(k < problem.k - 1) { oss << ", "; }
+    }
+    oss << "]\"";
+    
+    oss << " \"[";
+    for(int k = 0; k < problem.k; ++k){ oss << (k == problem.k - 1 ? to_string(problem.lengths[k]) : to_string(problem.lengths[k]) + ", "); }
+    oss << "]\"";
+    
+    oss << " \"[";
+    for(int k = 0; k < problem.k; ++k){ oss << (k == problem.k - 1 ? to_string(problem.widths[k]) : to_string(problem.widths[k]) + ", "); }
+    oss << "]\"";
+
+    if(problem.dim == 3){
+        oss << " \"[";
+        for(int k = 0; k < problem.k; ++k){ oss << (k == problem.k - 1 ? to_string(problem.heights[k]) : to_string(problem.heights[k]) + ", "); }
+        oss << "]\"";
+    }
+
+    oss << " --color=b" << " --alpha=0.4";
+
+    pid_t pid = fork();
+    if(pid < 0){
+        throw std::runtime_error("Failed to execute plotting command");
+    }
+    else if (pid == 0){
+        if(system(NULL)){
+            system(oss.str().c_str());
+        }
+        else{
+            throw std::runtime_error("Failed to execute plotting command");
+        }
+    }
 }
 
 OrthogonalPackingSolver::~OrthogonalPackingSolver(){
