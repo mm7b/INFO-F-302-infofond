@@ -111,21 +111,27 @@ void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
 }
 
 OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
+    vec<Lit> lits;
     if(mu == NULL){ throw std::runtime_error("Unexpected error : prop vector is null"); }
     if(! okay()){
         return OrthogonalPackingSolution(problem, false);
     }
     else{
+        lits.clear();
         OrthogonalPackingSolution sol(problem, true);
         for(int k = 0; k < problem.k; ++k){
             for(int a = 0; a < problem.m; ++a){
                 for(int b = 0; b < problem.n; ++b){
                     if(model[mu[k][a][b]] == l_True){
                         sol[k][0] = a; sol[k][1] = b;
+                        lits.push(~Lit(mu[k][a][b]));
+                    }else{
+                        lits.push(Lit(mu[k][a][b]));
                     }
                 }
             }
         }
+        addClause(lits);
         return sol;
     }
 }
