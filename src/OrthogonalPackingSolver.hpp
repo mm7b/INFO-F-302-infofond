@@ -1,3 +1,6 @@
+#include <string>
+#include <sstream>
+
 #include "Solver.hpp"
 
 template<typename T>
