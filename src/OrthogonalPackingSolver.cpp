@@ -1,11 +1,7 @@
-#include <string>
-#include <sstream>
 #include <exception>
 #include <stdexcept>
 #include <cctype>
-#include <stdlib.h>
 #include <algorithm>
-
 #include "OrthogonalPackingSolver.hpp"
 
 class OrthogonalPackingSolver : public Solver {

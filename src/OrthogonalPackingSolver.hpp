@@ -1,5 +1,8 @@
 #include <string>
 #include <sstream>
+#include <stdlib.h>
+#include <exception>
+#include <stdexcept>
 
 #include "Solver.hpp"
 
