@@ -117,6 +117,62 @@ struct OrthogonalPackingProblem{
     };
 };
 
+struct OrthogonalPackingSolution {
+    OrthogonalPackingProblem problem;
+    int** solution;
+    bool exists;
+
+    OrthogonalPackingSolution(const OrthogonalPackingProblem& p, bool e) : problem(p), solution(NULL), exists(e) {
+        solution = new int*[problem.k];
+        for(int k = 0; k < problem.k; ++k){
+            solution[k] = new int[problem.dim];
+            for(int d = 0; d < problem.dim; ++d){
+                solution[k][d] = -1;
+            }
+        }
+    }
+
+    OrthogonalPackingSolution(const OrthogonalPackingSolution& other) : problem(other.problem), solution(NULL), exists(other.exists){
+        solution = new int*[problem.k];
+        for(int k = 0; k < problem.k; ++k){
+            solution[k] = new int[problem.dim];
+            std::copy(other.solution[k], other.solution[k] + problem.dim, solution[k]);
+        }
+    }
+
+    OrthogonalPackingSolution& operator=(const OrthogonalPackingSolution& other){
+        if(this != &other){
+            if(solution != NULL) {
+                for(int k = 0; k < problem.k; ++k){
+                    if(solution[k] != NULL) { delete[] solution[k]; }
+                }
+                delete[] solution;
+            }
+            problem = other.problem; exists = other.exists;
+            solution = new int*[problem.k];
+            for(int k = 0; k < problem.k; ++k){
+                solution[k] = new int[problem.dim];
+                std::copy(other.solution[k], other.solution[k] + problem.dim, solution[k]);
+            }
+        }
+        return *this;
+    }
+
+    int* operator[](int i){
+        if(i < 0 || i >= problem.k) { throw std::out_of_range("Rectangle " + to_string(i) + " does not exist"); }
+        return solution[i];
+    }
+
+    virtual ~OrthogonalPackingSolution(){ 
+        if(solution != NULL) {
+            for(int k = 0; k < problem.k; ++k){
+                if(solution[k] != NULL) { delete[] solution[k]; }
+            }
+            delete[] solution;
+        }
+    }
+};
+
 class OrthogonalPackingSolver : public Solver {
 private:
 	OrthogonalPackingProblem problem;
@@ -132,7 +188,10 @@ public:
 
 	void add_constraints();
 
+    OrthogonalPackingSolution get_solution();
+
 	void print_solution(std::ostream&);
+    void plot_solution();
 
 	virtual ~OrthogonalPackingSolver();
 };

@@ -13,8 +13,6 @@ int orthogonalPacking2D(){
     }
 }
 
-
-
 int main() {
 
 	std::cout << "Please choose the action to perform:" << std::endl;

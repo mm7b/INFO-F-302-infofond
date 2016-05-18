@@ -94,21 +94,39 @@ bool OrthogonalPackingSolver::overlapping(int a, int b, int d, int e, int k, int
 }
 
 void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
-    if(mu == NULL){ throw std::runtime_error("Unexpected error : prop vector is null"); }
-    if(! okay()){
+    OrthogonalPackingSolution sol = get_solution();
+    if(! sol.exists){
         out << 0 << std::endl;
     }
     else{
         for(int k = 0; k < problem.k; ++k){
+            out << k + 1 << " " << sol[k][0] << sol[k][1] << std::endl;
+        }
+    }
+}
+
+OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
+    if(mu == NULL){ throw std::runtime_error("Unexpected error : prop vector is null"); }
+    if(! okay()){
+        return OrthogonalPackingSolution(problem, false);
+    }
+    else{
+        OrthogonalPackingSolution sol(problem, true);
+        for(int k = 0; k < problem.k; ++k){
             for(int a = 0; a < problem.m; ++a){
                 for(int b = 0; b < problem.n; ++b){
                     if(model[mu[k][a][b]] == l_True){
-                        out << k + 1 << " " << a << " " << b << std::endl;
+                        sol[k][0] = a; sol[k][1] = b;
                     }
                 }
             }
         }
+        return sol;
     }
+}
+
+void OrthogonalPackingSolver::plot_solution(){
+    OrthogonalPackingSolution sol = get_solution();
 }
 
 OrthogonalPackingSolver::~OrthogonalPackingSolver(){
