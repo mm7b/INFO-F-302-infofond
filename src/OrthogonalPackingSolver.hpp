@@ -17,6 +17,31 @@ std::string to_string(const T& value){
     return oss.str();
 }
 
+enum Dimension : bool {
+    DIM_2 = true,
+    DIM_3 = false
+}
+
+enum Solution : bool {
+    SMALLEST = true,
+    ANY = false
+}
+
+enum Height : bool {
+    FLOAT = true,
+    NO_FLOAT = false
+}
+
+enum Orientation : bool {
+    PIVOT = true,
+    FIX = false
+}
+
+enum EdgesUnit : bool {
+    MINIMUM = true,
+    FREE = false
+}
+
 struct OrthogonalPackingProblem{
     int k, dim, n, m, h;
     int* lengths; int* widths; int* heights;
@@ -34,7 +59,7 @@ struct OrthogonalPackingProblem{
         };
 
         static int next_int(std::string&);
-        static OrthogonalPackingProblem parse(std::istream&, bool = false);
+        static OrthogonalPackingProblem parse(std::istream&, bool, bool, bool, bool, bool!);
     };
 };
 
@@ -59,7 +84,7 @@ private:
 
     bool out_of_bounds(int, int, int, int);
     bool overlapping(int, int, int, int, int, int, int, int);
-    
+
 public:
 	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
