@@ -6,7 +6,7 @@ sudosat: Main.o Solver.o
 Solver.o: Solver.cpp Solver.hpp SolverTypes.hpp Global.hpp Heap.hpp
 	$(G++) -c Solver.cpp 
 
-Main.o: Main.cpp  Solver.hpp 
+Main.o: Main.cpp  Solver.hpp OrthogonalPackingSolver.hpp
 	$(G++) -c Main.cpp
 
 clean:
