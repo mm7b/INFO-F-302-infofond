@@ -158,16 +158,24 @@ OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem&
 void OrthogonalPackingSolver::add_constraints(){
 
     /* Initialisation des prop */
-    mu = new int**[problem.k];
+    mu = new int***[problem.k];
     for(int k = 0; k < problem.k; ++k){
-        mu[k] = new int*[problem.m];
+        mu[k] = new int**[problem.m];
         for(int a = 0; a < problem.m; ++a){
-            mu[k][a] = new int[problem.n];
+            mu[k][a] = new int*[problem.n];
             for(int b = 0; b < problem.n; ++b){
-               mu[k][a][b] = newVar();
+                if(problem.is_3d()){
+                    mu[k][a][b] = new int[problem.h];
+                    for(int c = 0; c < problem.h; ++c){
+                        mu[k][a][b][c] = newVar();
+                    }    
+                }
+                else{
+                    mu[k][a][b] = new int[1];
+                    mu[k][a][b][0] = newVar();
+                }
             }
         }
-
     }
 
     /* On ne peut avoir 2 mu à vrai en même temps pour un même k, 
@@ -175,33 +183,42 @@ void OrthogonalPackingSolver::add_constraints(){
     for(int k = 0; k < problem.k; ++k){
         for(int a = 0; a < problem.m; ++a){
             for(int b = 0; b < problem.n; ++b){
-                for(int d = a + 1; d < problem.m; ++d){
-                    for(int e = b + 1; e < problem.n; ++e){
-                        addBinary(~Lit(mu[k][a][b]), ~Lit(mu[k][d][e]));
+                for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
+                    for(int d = 0; d < problem.m; ++d){
+                        for(int e = 0; e < problem.n; ++e){
+                            for(int f = 0; f < (problem.is_3d() ? problem.h : 1); ++f){
+                                if(a == d && b == e && c == f){ continue; }
+                                addBinary(~Lit(mu[k][a][b][c]), ~Lit(mu[k][d][e][f]));    
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    /* On doit avoir au mois 1 mu à vrai pour un rectangle k donné  */
+    /* On doit avoir au moins 1 mu à vrai pour un rectangle k donné  */
     vec<Lit> lits;
     for(int k = 0; k < problem.k; ++k){
         lits.clear();
          for(int a = 0; a < problem.m; ++a){
             for(int b = 0; b < problem.n; ++b){
-                lits.push(Lit(mu[k][a][b]));
+                for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
+                    lits.push(Lit(mu[k][a][b][c]));    
+                }
             }
         }
         addClause(lits);
     }
 
-    /* (a, b) doit être dans les bornes du grand rectangle */
+    /* (a, b, c) doit être dans les bornes du grand rectangle */
     for(int k = 0; k < problem.k; ++k){
          for(int a = 0; a < problem.m; ++a){
             for(int b = 0; b < problem.n; ++b){
-                if(out_of_bounds(a, b, k)){
-                    addUnit(~Lit(mu[k][a][b]));
+                for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
+                    if(out_of_bounds(a, b, c, k)){
+                        addUnit(~Lit(mu[k][a][b][c]));
+                    }
                 }
             }
         }
@@ -212,11 +229,15 @@ void OrthogonalPackingSolver::add_constraints(){
     for(int k = 0; k < problem.k; ++k){
         for(int a = 0; a < problem.m; ++a){
             for(int b = 0; b < problem.n; ++b){
-                for(int l = k + 1; l < problem.k; ++l){
-                    for(int d = 0; d < problem.m; ++d){
-                        for(int e = 0; e < problem.n; ++e){
-                            if(overlapping(a, b, d, e, k, l)){
-                                addBinary(~Lit(mu[k][a][b]), ~Lit(mu[l][d][e]));
+                for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
+                    for(int l = k + 1; l < problem.k; ++l){
+                        for(int d = 0; d < problem.m; ++d){
+                            for(int e = 0; e < problem.n; ++e){
+                                for(int f = 0; f < (problem.is_3d() ? problem.h : 1); ++f){
+                                    if(overlapping(a, b, c, d, e, f, k, l)){
+                                        addBinary(~Lit(mu[k][a][b][c]), ~Lit(mu[l][d][e][f]));
+                                    }
+                                }
                             }
                         }
                     }
@@ -228,16 +249,20 @@ void OrthogonalPackingSolver::add_constraints(){
 
 }
 
-/* Inutile de vérifier a >= 0 ni b >= 0 car ce sont des indices donc >= 0 par définition */
-bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int k){
-    return !(a + problem.lengths[k] <= problem.m && b + problem.widths[k] <= problem.n);
+/* Inutile de vérifier a >= 0 ni b >= 0 ni c >= 0 car ce sont des indices donc >= 0 par définition */
+bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int c, int k){
+    return !(  a + problem.lengths[k] <= problem.m 
+            && b + problem.widths[k] <= problem.n
+            && (problem.is_3d() ? c + problem.heights[k] <= problem.h : true));
 }
 
-bool OrthogonalPackingSolver::overlapping(int a, int b, int d, int e, int k, int l){
-    return !( a + problem.lengths[k] <= d
-        ||  a >= d + problem.lengths[l]
-        ||  b + problem.widths[k] <= e
-        ||  b >= e + problem.widths[l]);
+bool OrthogonalPackingSolver::overlapping(int a, int b, int c, int d, int e, int f, int k, int l){
+    return !(   a + problem.lengths[k] <= d
+            ||  a >= d + problem.lengths[l]
+            ||  b + problem.widths[k] <= e
+            ||  b >= e + problem.widths[l]
+            ||  (problem.is_3d() ? c + problem.heights[k] <= f : false)
+            ||  (problem.is_3d() ? c >= f + problem.widths[l] : false));
 }
 
 void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
@@ -247,7 +272,11 @@ void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
     }
     else{
         for(int k = 0; k < problem.k; ++k){
-            out << k + 1 << " " << sol[k][0] << " " << sol[k][1] << std::endl;
+            out << k + 1 << " ";
+            for(int d = 0; d < problem.dim; ++d){
+                out << sol[k][d] << (d < problem.dim - 1 ? " " : "");
+            }
+            out << std::endl;
         }
     }
 }
@@ -264,11 +293,14 @@ OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
         for(int k = 0; k < problem.k; ++k){
             for(int a = 0; a < problem.m; ++a){
                 for(int b = 0; b < problem.n; ++b){
-                    if(model[mu[k][a][b]] == l_True){
-                        sol[k][0] = a; sol[k][1] = b;
-                        lits.push(~Lit(mu[k][a][b]));
-                    }else{
-                        lits.push(Lit(mu[k][a][b]));
+                    for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
+                        if(model[mu[k][a][b][c]] == l_True){
+                            sol[k][0] = a; sol[k][1] = b;
+                            if(problem.is_3d()){ sol[k][2] = c; }
+                            lits.push(~Lit(mu[k][a][b][c]));
+                        } else{
+                            lits.push(Lit(mu[k][a][b][c]));
+                        }
                     }
                 }
             }
@@ -317,9 +349,10 @@ void OrthogonalPackingSolver::plot_solution(){
     else if (pid == 0){
         if(system(NULL)){
             system(oss.str().c_str());
+            _exit(EXIT_SUCCESS);
         }
         else{
-            throw std::runtime_error("Failed to execute plotting command");
+            _exit(EXIT_FAILURE);
         }
     }
 }

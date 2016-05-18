@@ -23,13 +23,10 @@ struct OrthogonalPackingProblem{
 
     OrthogonalPackingProblem(int, int, int, int, int);
     OrthogonalPackingProblem(const OrthogonalPackingProblem&);
-
     OrthogonalPackingProblem& operator=(const OrthogonalPackingProblem&);
-
-    virtual ~OrthogonalPackingProblem();
-
     void print(std::ostream& = std::cout);
-
+    bool is_3d() const { return dim == 3; }
+    virtual ~OrthogonalPackingProblem();
 
     struct Parser{
         struct ParseException : public std::runtime_error {
@@ -41,8 +38,6 @@ struct OrthogonalPackingProblem{
     };
 };
 
-
-
 struct OrthogonalPackingSolution {
     static const std::string PYTHON_PLOTTER_FILENAME;
 
@@ -51,26 +46,20 @@ struct OrthogonalPackingSolution {
     bool exists;
 
     OrthogonalPackingSolution(const OrthogonalPackingProblem&, bool);
-
     OrthogonalPackingSolution(const OrthogonalPackingSolution&);
-
     OrthogonalPackingSolution& operator=(const OrthogonalPackingSolution&);
-
-    int* operator[](int);  
-
+    int* operator[](int);
     virtual ~OrthogonalPackingSolution();
 };
 
 class OrthogonalPackingSolver : public Solver {
 private:
 	OrthogonalPackingProblem problem;
+    int**** mu;
 
-    int*** mu;
-
-    bool overlapping(int, int, int, int, int, int);
-
-    bool out_of_bounds(int, int, int);
-
+    bool out_of_bounds(int, int, int, int);
+    bool overlapping(int, int, int, int, int, int, int, int);
+    
 public:
 	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
