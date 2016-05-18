@@ -12,11 +12,11 @@ enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 =
 
 OrthogonalPackingProblem (*parse)(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact) = OrthogonalPackingProblem::Parser::parse;
 
-OrthogonalPackingProblem build_problem(int type, std::istream& in){
+OrthogonalPackingProblem build_problem(int question, std::istream& in){
     Dimension dimension; SolutionType solution_type; 
     HeightConstraint height_constraint; 
     Orientation orientation; EdgeContact edge_contact;
-    switch(type){
+    switch(question){
         case Q3:
             dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
@@ -46,14 +46,10 @@ OrthogonalPackingProblem build_problem(int type, std::istream& in){
 }
 
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
-	try{
-        OrthogonalPackingSolver solver(problem);
-        solver.solve();
-        solver.print_solution(std::cout);
-        solver.plot_solution();
-    } catch(const std::exception& e){
-        std::cout << e.what() << std::endl;
-    }
+    OrthogonalPackingSolver solver(problem);
+    solver.solve();
+    solver.print_solution(std::cout);
+    solver.plot_solution();
 }
 
 const std::string prompt = ">> ";
@@ -81,7 +77,8 @@ bool display_menu(std::istream& in = std::cin){
 int main() {
     bool stop = false;
     do{
-        stop = display_menu();
+        try{ stop = display_menu(); } 
+        catch(const std::exception& e){ std::cout << e.what() << std::endl; }
     } while(!stop);
 
     return EXIT_SUCCESS;

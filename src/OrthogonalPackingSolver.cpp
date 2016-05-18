@@ -92,6 +92,7 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             h = next_int(input_line);
         }
         OrthogonalPackingProblem problem(k, dim, n, m, h, solution, height, orientation, edge_contact);
+        std::cout << "k:"<<k<<"n:"<<n<<"m:"<<m<<"h:"<<h<<std::endl;
         for(int i = 0; i < k; ++i){
             std::getline(in, input_line);
             int index = next_int(input_line);
@@ -99,6 +100,7 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             problem.lengths[i] = next_int(input_line);
             problem.widths[i] = next_int(input_line);   
             problem.heights[i] = dimension == DIM_3 ? next_int(input_line) : -1;
+            std::cout << "l:"<<problem.lengths[i]<<"w:"<<problem.widths[i]<<"h"<<problem.heights[i]<<std::endl;
         }
         return problem;
 }
