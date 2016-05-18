@@ -68,6 +68,17 @@ struct OrthogonalPackingProblem{
         out << std::endl;
     }
 
+    void selfGenerateNAndM(){
+        for(int i = 0; i<k; i++){
+            m += lengths[i];
+            n += widths[i];
+        }
+        if (n>m){
+            m = n;
+        }else{
+            n = m;
+        }
+    }
 
     struct Parser{
         struct ParseException : public std::runtime_error {
@@ -87,15 +98,19 @@ struct OrthogonalPackingProblem{
             return atoi(digit.c_str());
         }
 
-        inline static OrthogonalPackingProblem parse(std::istream& in, bool three_dim = false){
+        inline static OrthogonalPackingProblem parse(std::istream& in, bool three_dim = false, bool n_and_m_parsing = true){
             int dim = three_dim ? 3 : 2;
             std::string input_line;
             std::getline(in, input_line);
             int k = next_int(input_line);
-            std::getline(in, input_line);
-            int n = next_int(input_line);
-            std::getline(in, input_line);
-            int m = next_int(input_line);
+            int n = 0;
+            int m = 0;
+            if(n_and_m_parsing){
+                std::getline(in, input_line);
+                n = next_int(input_line);
+                std::getline(in, input_line);
+                m = next_int(input_line);
+            }
             int h = -1;
             if(three_dim){
                 std::getline(in, input_line);
@@ -109,6 +124,9 @@ struct OrthogonalPackingProblem{
                 problem.lengths[i] = next_int(input_line);
                 problem.widths[i] = next_int(input_line);   
                 problem.heights[i] = three_dim ? next_int(input_line) : -1;
+            }
+            if(!n_and_m_parsing){
+                problem.selfGenerateNAndM();
             }
             return problem;
         }

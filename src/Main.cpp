@@ -14,6 +14,21 @@ int orthogonalPacking2D(){
     }
 }
 
+int tiniestSquare(){
+	OrthogonalPackingSolver solver(OrthogonalPackingProblem::Parser::parse(std::cin, false, false));
+	solver.solve();
+	int num = 0;
+	solver.print_solution(std::cout);
+	while(solver.get_solution().exists && num < 21){
+		num++;
+		solver.solve();
+	}
+	solver.print_solution(std::cout);
+	solver.plot_solution();
+	std::cout << num << std::endl;
+	return 0;
+}
+
 int main() {
 
 	std::cout << "Please choose the action to perform:" << std::endl;
@@ -32,7 +47,7 @@ int main() {
 	if(action == 1){
 	    return orthogonalPacking2D();
 	} else if (action == 2) {
-		std::cout << "Tiniest square bro" << std:: endl;
+		return tiniestSquare();
 	} else {
 		std::cout << "Invalid action, please choose between 1 & 2" << std::endl;
 		return main();
