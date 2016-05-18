@@ -230,7 +230,8 @@ void OrthogonalPackingSolver::add_constraints(){
         for(int a = 0; a < problem.m; ++a){
             for(int b = 0; b < problem.n; ++b){
                 for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
-                    for(int l = k + 1; l < problem.k; ++l){
+                    for(int l = 0; l < problem.k; ++l){
+                        if(k == l){ continue; }
                         for(int d = 0; d < problem.m; ++d){
                             for(int e = 0; e < problem.n; ++e){
                                 for(int f = 0; f < (problem.is_3d() ? problem.h : 1); ++f){
