@@ -1,16 +1,15 @@
 #include <iostream>
 #include "OrthogonalPackingSolver.hpp"
+#include <map>
 
-int orthogonalPacking2D(){
+void orthogonal_packing(bool is_3d){
 	try{
-        OrthogonalPackingSolver solver(OrthogonalPackingProblem::Parser::parse(std::cin));
+        OrthogonalPackingSolver solver(OrthogonalPackingProblem::Parser::parse(std::cin, is_3d));
         solver.solve();
         solver.print_solution(std::cout);
         solver.plot_solution();
-        return 0;
     } catch(const std::exception& e){
         std::cout << e.what() << std::endl;
-        return 1;
     }
 }
 
@@ -29,27 +28,29 @@ int tiniestSquare(){
 	return 0;
 }
 
+const std::string prompt = ">> ";
+
+bool display_menu(){
+    std::string input;
+    std::cout   << "Choisissez :" << std::endl
+                << "(1) 2D orthogonal packing solver" << std::endl
+                << "(2) 3D orthogonal packing solver" << std::endl
+                << "(3) Plus petit carré" << std::endl
+                << "(q) Quitter" << std::endl
+                << prompt;
+    std::getline(std::cin, input);
+    if(input == "1")        { orthogonal_packing(false); }
+    else if(input == "2")   { orthogonal_packing(true); }
+    else if(input == "3")   { tiniestSquare(); }
+    else if(input == "q")   { return true; }
+    else{ std::cout << "Entrée non valide !" << std::endl; }
+    return false;
+}
+
 int main() {
-
-	std::cout << "Please choose the action to perform:" << std::endl;
-	std::cout << "1) 2D orthogonal packing solver" << std::endl;
-	std::cout << "2) Tiniest square to put all the rectangles in" << std::endl;
-
-	int action = 0;
-	std::string input = "";
- 	while (true) {
-	   std::getline(std::cin, input);
-	   std::stringstream myStream(input);
-	   if (myStream >> action)
-	     break;
-	   std::cout << "Invalid number, please try again" << std::endl;
-	 }
-	if(action == 1){
-	    return orthogonalPacking2D();
-	} else if (action == 2) {
-		return tiniestSquare();
-	} else {
-		std::cout << "Invalid action, please choose between 1 & 2" << std::endl;
-		return main();
-	}
+    bool stop = false;
+    do{
+        stop = display_menu();
+    } while(!stop);
+    return 0;
 }
