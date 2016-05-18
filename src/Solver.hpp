@@ -146,7 +146,7 @@ public:
                 addTernary_tmp.growTo(3);
              }
 
-   ~Solver() {
+   virtual ~Solver() {
        for (int i = 0; i < learnts.size(); i++) remove(learnts[i], true);
        for (int i = 0; i < clauses.size(); i++) if (clauses[i] != NULL) remove(clauses[i], true); }
 
