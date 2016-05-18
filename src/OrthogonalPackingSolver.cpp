@@ -100,7 +100,7 @@ void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
     }
     else{
         for(int k = 0; k < problem.k; ++k){
-            out << k + 1 << " " << sol[k][0] << sol[k][1] << std::endl;
+            out << k + 1 << " " << sol[k][0] << " " << sol[k][1] << std::endl;
         }
     }
 }
