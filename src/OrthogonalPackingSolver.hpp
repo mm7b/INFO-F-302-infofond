@@ -1,3 +1,6 @@
+#ifndef OrthogonalPackingSolver_h
+#define OrthogonalPackingSolver_h
+
 #include <string>
 #include <sstream>
 #include <stdlib.h>
@@ -112,3 +115,25 @@ struct OrthogonalPackingProblem{
         }
     };
 };
+
+class OrthogonalPackingSolver : public Solver {
+private:
+	OrthogonalPackingProblem problem;
+
+    int*** mu;
+
+    bool overlapping(int, int, int, int, int, int);
+
+    bool out_of_bounds(int, int, int);
+
+public:
+	OrthogonalPackingSolver(const OrthogonalPackingProblem& );
+
+	void add_constraints();
+
+	void print_solution(std::ostream&);
+
+	virtual ~OrthogonalPackingSolver();
+};
+
+#endif

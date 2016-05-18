@@ -1,14 +1,8 @@
-#include <exception>
-#include <stdexcept>
 #include <cctype>
 #include <algorithm>
 #include "OrthogonalPackingSolver.hpp"
 
 class OrthogonalPackingSolver : public Solver {
-
-    OrthogonalPackingProblem problem;
-
-    int*** mu;
 
     OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : Solver(), problem(p), mu(NULL) {
 
