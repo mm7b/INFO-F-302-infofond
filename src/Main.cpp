@@ -8,19 +8,41 @@ bool is_number(const std::string& s){
     return !s.empty() && it == s.end();
 }
 
-enum ProblemType : int { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8 }
+enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8 };
 
-OrthogonalPackingProblem (*parse)(std::istream&, bool, bool, bool, bool, bool) = OrthogonalPackingProblem::Parser::parse;
+OrthogonalPackingProblem (*parse)(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact) = OrthogonalPackingProblem::Parser::parse;
 
-OrthogonalPackingProblem build_problem(int problem_type, std::istream& in){
-    if(problem_type == ProblemType.Q3)      { return parse(in, Dimension.DIM_2, Solution.ANY, Height.FLOAT, Orientation.FIX, EdgesUnit.FREE); }
-    else if(problem_type == ProblemType.Q4) { return parse(in, Dimension.DIM_2, Solution.SMALLEST, Height.FLOAT, Orientation.FIX, EdgesUnit.FREE); }
-    else if(problem_type == ProblemType.Q5) { return parse(in, Dimension.DIM_2, Solution.SMALLEST, Height.FLOAT, Orientation.FIX, EdgesUnit.FREE); }
-    else if(problem_type == ProblemType.Q6) { return parse(in, Dimension.DIM_3, Solution.ANY, Height.FLOAT, Orientation.FIX, EdgesUnit.FREE); }
-    else if(problem_type == ProblemType.Q7) { return parse(in, Dimension.DIM_3, Solution.ANY, Height.NO_FLOAT, Orientation.FIX, EdgesUnit.FREE); }
-    else if(problem_type == ProblemType.Q8) { return parse(in, Dimension.DIM_2, Solution.ANY, Height.FLOAT, Orientation.PIVOT, EdgesUnit.FREE); }
-    else if(problem_type == ProblemType.Q9) { return parse(in, Dimension.DIM_2, Solution.ANY, Height.FLOAT, Orientation.FIX, EdgesUnit.MINIMUM); }
-    else if(problem_type == ProblemType.Q10){ return parse(in, Dimension.DIM_2, Solution.SMALLEST, Height.FLOAT, Orientation.FIX, EdgesUnit.FREE); }
+OrthogonalPackingProblem build_problem(int type, std::istream& in){
+    Dimension dimension; SolutionType solution_type; 
+    HeightConstraint height_constraint; 
+    Orientation orientation; EdgeContact edge_contact;
+    switch(type){
+        case Q3:
+            dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            break;
+        case Q4:
+            dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            break;
+        case Q5:
+            dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            break;
+        case Q6:
+            dimension = DIM_3; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            break;
+        case Q7:
+            dimension = DIM_3; solution_type = ANY; height_constraint = NO_FLOAT; orientation = FIX; edge_contact = FREE;
+            break;
+        case Q8:
+            dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = PIVOT; edge_contact = FREE;
+            break;
+        case Q9:
+            dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = MINIMUM;
+            break;
+        case Q10:
+            dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            break;
+    }
+    return parse(in, dimension, solution_type, height_constraint, orientation, edge_contact);
 }
 
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
@@ -36,8 +58,7 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
 
 const std::string prompt = ">> ";
 
-bool display_menu(){
-    std::istream in = std::cin;
+bool display_menu(std::istream& in = std::cin){
     std::string input;
     std::cout   << "Choisissez :" << std::endl
                 << "(1) Q3  : 2D orthogonal packing" << std::endl
@@ -51,7 +72,7 @@ bool display_menu(){
                 << "(q) Quitter" << std::endl
                 << prompt;
     std::getline(in, input);
-    if(is_number(input))    { orthogonal_packing(build_problem(atoi(input), in));}
+    if(is_number(input))    { orthogonal_packing(build_problem(atoi(input.c_str()), in));}
     else if(input == "q")   { return true; }
     else{ std::cout << "Entrée non valide !" << std::endl; }
     return false;
@@ -62,6 +83,6 @@ int main() {
     do{
         stop = display_menu();
     } while(!stop);
-    
+
     return EXIT_SUCCESS;
 }

@@ -17,36 +17,38 @@ std::string to_string(const T& value){
     return oss.str();
 }
 
-enum Dimension : bool {
+enum Dimension {
     DIM_2 = true,
     DIM_3 = false
-}
+};
 
-enum Solution : bool {
+enum SolutionType {
     SMALLEST = true,
     ANY = false
-}
+};
 
-enum Height : bool {
+enum HeightConstraint {
     FLOAT = true,
     NO_FLOAT = false
-}
+};
 
-enum Orientation : bool {
+enum Orientation {
     PIVOT = true,
     FIX = false
-}
+};
 
-enum EdgesUnit : bool {
+enum EdgeContact {
     MINIMUM = true,
     FREE = false
-}
+};
 
 struct OrthogonalPackingProblem{
     int k, dim, n, m, h;
+    SolutionType solution; HeightConstraint height;
+    Orientation orientation; EdgeContact edge_contact;
     int* lengths; int* widths; int* heights;
 
-    OrthogonalPackingProblem(int, int, int, int, int);
+    OrthogonalPackingProblem(int, int, int, int, int, SolutionType, HeightConstraint, Orientation, EdgeContact);
     OrthogonalPackingProblem(const OrthogonalPackingProblem&);
     OrthogonalPackingProblem& operator=(const OrthogonalPackingProblem&);
     void print(std::ostream& = std::cout);
@@ -59,7 +61,7 @@ struct OrthogonalPackingProblem{
         };
 
         static int next_int(std::string&);
-        static OrthogonalPackingProblem parse(std::istream&, bool, bool, bool, bool, bool!);
+        static OrthogonalPackingProblem parse(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact);
     };
 };
 
