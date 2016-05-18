@@ -1,13 +1,12 @@
-G++ = g++-4.9 -Wall  -g
+CXX = g++-4.9 
+CXXFLAGS = -Wall -g
+LDFLAGS = -lm
+TARGET = solver
 
-sudosat: Main.o Solver.o
-	$(G++) *.o -o orthogonal_packing
-
-Solver.o: Solver.cpp Solver.hpp SolverTypes.hpp Global.hpp Heap.hpp
-	$(G++) -c Solver.cpp 
-
-Main.o: Main.cpp  Solver.hpp OrthogonalPackingSolver.hpp
-	$(G++) -c Main.cpp
+${TARGET}: Solver.o OrthogonalPackingSolver.o Main.o
+	${CXX} -o $@ $^ ${LDFLAGS}
 
 clean:
-	$(RM) *.o orthogonal_packing
+	rm -f *.o ${TARGET}
+
+

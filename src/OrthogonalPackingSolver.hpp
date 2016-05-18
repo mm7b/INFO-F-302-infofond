@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <stdlib.h>
 #include <exception>
 #include <stdexcept>
@@ -45,7 +46,7 @@ struct OrthogonalPackingProblem{
         return *this;
     }
 
-    ~OrthogonalPackingProblem(){
+    virtual ~OrthogonalPackingProblem(){
         delete[] lengths;
         delete[] widths;
         delete[] heights;
@@ -127,7 +128,7 @@ private:
     bool out_of_bounds(int, int, int);
 
 public:
-	OrthogonalPackingSolver(const OrthogonalPackingProblem& );
+	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
 	void add_constraints();
 

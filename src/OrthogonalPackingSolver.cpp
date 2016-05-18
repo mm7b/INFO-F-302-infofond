@@ -111,7 +111,7 @@ void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
     }
 }
 
-virtual OrthogonalPackingSolver::~OrthogonalPackingSolver(){
+OrthogonalPackingSolver::~OrthogonalPackingSolver(){
     for(int k = 0; k < problem.k; ++k){
         for(int a = 0; a < problem.m; ++a){
             delete[] mu[k][a];
