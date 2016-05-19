@@ -22,32 +22,17 @@ std::pair<bool, int> parse_number(const std::string& s){
     else{ return std::pair<bool, int>(true, atoi(number_str.c_str())); }
 }
 
-int getMaxNOrMSize(OrthogonalPackingSolution& sol){
-    int max_size = -1;
-    for (int i = 0; i < sol.problem.k; i++){
-        int actual_size = std::max(sol[i][0]+sol.problem.lengths[i], sol[i][1]+sol.problem.widths[i]);
-        if(actual_size > max_size){
-            max_size = actual_size;
-        }
-    }
-    return max_size;
-}
-
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
     OrthogonalPackingSolver solver(problem);
     solver.solve();
     if(problem.solution_type == SMALLEST){
-        OrthogonalPackingSolution tiniest_square_sol = solver.get_solution();
-        int minimum_square_size = getMaxNOrMSize(tiniest_square_sol);
-        OrthogonalPackingSolution sol = tiniest_square_sol;
+        OrthogonalPackingSolution sol = solver.get_solution();
+        int minimum_square_size = problem.n;
         while(sol.exists){
+            solver.addUnit(~Lit(solver.dimension[minimum_square_size - problem.min_n]));
             solver.solve();
             sol = solver.get_solution();
-            int actual_size = getMaxNOrMSize(sol);
-            if(sol.exists && actual_size < minimum_square_size){
-                tiniest_square_sol = sol;
-                minimum_square_size = actual_size;
-            }
+            --minimum_square_size;
         }
         std::cout << "Tiniest square size: " << minimum_square_size << std::endl;
     }else{

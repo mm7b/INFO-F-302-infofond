@@ -258,7 +258,7 @@ void OrthogonalPackingSolver::add_constraints(){
 	            for(int b = 0; b < problem.n; ++b){
                     in_bounds[k][a][b] = new int*[1];
                     in_bounds[k][a][b][0]= new int[problem.n - problem.min_n];
-                    for(int n = 0; n < problem.n - problem.min_n, ++n){
+                    for(int n = 0; n < problem.n - problem.min_n; ++n){
                     	in_bounds[k][a][b][0][n] = newVar();
                     }
 
@@ -309,12 +309,12 @@ void OrthogonalPackingSolver::add_constraints(){
                     		lits.clear();
                     		lits.push(~Lit(mu[k][a][b][c]));
                     		for(int n = 0; n<problem.n-problem.min_n ; ++n){
-                    			if(out_of_bounds(a, b, c, k, n+min_n)){
+                    			if(out_of_bounds(a, b, c, k, n + problem.min_n, n + problem.min_n)){
 									addUnit(~Lit(in_bounds[k][a][b][c][n]));
                     			}else{
 									addBinary(~Lit(in_bounds[k][a][b][c][n]), Lit(dimension[n]));
 								}
-								lits.push(Lit[in_bounds[k][a][b][c][n]]);
+								lits.push(Lit(in_bounds[k][a][b][c][n]));
                     		}
                     		addClause(lits);
                     	}else{
@@ -454,13 +454,11 @@ bool OrthogonalPackingSolver::carry(int a, int b, int c, int d, int e, int f, in
 }
 
 OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
-    vec<Lit> lits;
     if(mu == NULL){ throw std::runtime_error("Unexpected error : prop vector is null"); }
     if(! okay()){
         return OrthogonalPackingSolution(problem, false);
     }
     else{
-        lits.clear();
         OrthogonalPackingSolution sol(problem, true);
         for(int k = 0; k < problem.k; ++k){
             for(int a = 0; a < problem.m; ++a){
@@ -469,16 +467,12 @@ OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
                         if(model[mu[k][a][b][c]] == l_True){
                             sol[k][0] = a; sol[k][1] = b;
                             if(problem.is_3d()){ sol[k][2] = c; }
-                            lits.push(~Lit(mu[k][a][b][c]));
-                        } else{
-                            lits.push(Lit(mu[k][a][b][c]));
                         }
                     }
                 }
             }
             if(!(problem.orientation == FIX)){ sol.pivot[k] = (model[pivot[k]] == l_True); }
         }
-        addClause(lits);
         return sol;
     }
 }

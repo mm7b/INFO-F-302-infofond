@@ -80,8 +80,7 @@ struct OrthogonalPackingSolution {
     virtual ~OrthogonalPackingSolution();
 };
 
-class OrthogonalPackingSolver : public Solver {
-private:
+struct OrthogonalPackingSolver : public Solver {
 	OrthogonalPackingProblem problem;
     int**** mu;
     int* pivot;
@@ -94,7 +93,6 @@ private:
     bool pivot_overlapping(int, int, int, int, int, int, int, int);
     bool carry(int, int, int, int, int, int, int, int);
 
-public:
 	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
 	void add_constraints();
