@@ -342,10 +342,7 @@ void OrthogonalPackingSolver::add_constraints(){
                 }
             }
         }
-    }
-
-
-
+    }   
 }
 
 /* Inutile de vérifier a >= 0 ni b >= 0 ni c >= 0 car ce sont des indices donc >= 0 par définition */
