@@ -99,7 +99,8 @@ int OrthogonalPackingProblem::Parser::next_int(std::string& line){
 }
 
 OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
-    std::istream& in, Dimension dimension, SolutionType solution, HeightConstraint height, 
+    std::istream& in, RectanglesSource rectangles_source,
+    Dimension dimension, SolutionType solution, HeightConstraint height, 
     Orientation orientation, EdgeContact edge_contact){
         int dim = dimension == DIM_3 ? 3 : 2;
         std::string input_line;

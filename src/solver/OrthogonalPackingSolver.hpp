@@ -17,6 +17,11 @@ std::string to_string(const T& value){
     return oss.str();
 }
 
+enum RectanglesSource {
+    GENERATE = true,
+    FROM_INPUT = false
+};
+
 enum Dimension {
     DIM_2 = true,
     DIM_3 = false
@@ -62,7 +67,7 @@ struct OrthogonalPackingProblem{
             ParseException(const std::string& msg) : std::runtime_error(msg) {}
         };
         static int next_int(std::string&);
-        static OrthogonalPackingProblem parse(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact);
+        static OrthogonalPackingProblem parse(std::istream&, RectanglesSource, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact);
     };
 };
 

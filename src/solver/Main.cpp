@@ -45,39 +45,39 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
 enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };
 
 OrthogonalPackingProblem build_problem(int question, std::istream& in){
-    Dimension dimension; SolutionType solution_type; 
-    HeightConstraint height_constraint; 
+    RectanglesSource rectangles_source; Dimension dimension; 
+    SolutionType solution_type; HeightConstraint height_constraint; 
     Orientation orientation; EdgeContact edge_contact;
     switch(question){
         case Q3:
-            dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         case Q4:
-            dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         case Q5:
-            dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = GENERATE; dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         case Q6:
-            dimension = DIM_3; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = FROM_INPUT; dimension = DIM_3; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         case Q7:
-            dimension = DIM_3; solution_type = ANY; height_constraint = NO_FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = FROM_INPUT; dimension = DIM_3; solution_type = ANY; height_constraint = NO_FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         case Q8:
-            dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = PIVOT; edge_contact = FREE;
+            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = PIVOT; edge_contact = FREE;
             break;
         case Q9:
-            dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = MINIMUM;
+            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = MINIMUM;
             break;
         case Q10:
-            dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         default:
             throw std::runtime_error("Unsupported question");
             break;
     }
-    return OrthogonalPackingProblem::Parser::parse(in, dimension, solution_type, height_constraint, orientation, edge_contact);
+    return OrthogonalPackingProblem::Parser::parse(in, rectangles_source, dimension, solution_type, height_constraint, orientation, edge_contact);
 }
 
 int from_arg(const std::string& arg, std::istream& in){
