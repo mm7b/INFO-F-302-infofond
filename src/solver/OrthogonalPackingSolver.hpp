@@ -61,7 +61,7 @@ struct OrthogonalPackingProblem{
             ParseException(const std::string& msg) : std::runtime_error(msg) {}
         };
         static int next_int(std::string&);
-        static OrthogonalPackingProblem parse(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact, bool = true);
+        static OrthogonalPackingProblem parse(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact);
     };
 };
 

@@ -92,18 +92,18 @@ int OrthogonalPackingProblem::Parser::next_int(std::string& line){
 
 OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
     std::istream& in, Dimension dimension, SolutionType solution, HeightConstraint height, 
-    Orientation orientation, EdgeContact edge_contact, bool parse_n_and_m){
+    Orientation orientation, EdgeContact edge_contact){
         int dim = dimension == DIM_3 ? 3 : 2;
         std::string input_line;
         std::getline(in, input_line);
         int k = next_int(input_line);
         int n = 0;
         int m = 0;
-        if(parse_n_and_m){
+        if(solution == ANY){
             std::getline(in, input_line);
-            int n = next_int(input_line);
+            n = next_int(input_line);
             std::getline(in, input_line);
-            int m = next_int(input_line);
+            m = next_int(input_line);
         }
         int h = -1;
         if(dimension == DIM_3){
@@ -119,7 +119,7 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             problem.widths[i] = next_int(input_line);   
             problem.heights[i] = dimension == DIM_3 ? next_int(input_line) : -1;
         }
-        if(!parse_n_and_m){
+        if(solution == SMALLEST){
             problem.selfGenerateNAndM();
         }
         return problem;
