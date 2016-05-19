@@ -28,7 +28,7 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
     solver.plot_solution();
 }
 
-enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8 };
+enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };
 
 OrthogonalPackingProblem (*parse)(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact) = OrthogonalPackingProblem::Parser::parse;
 
@@ -61,6 +61,9 @@ OrthogonalPackingProblem build_problem(int question, std::istream& in){
         case Q10:
             dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
+        default:
+            throw std::runtime_error("Unsupported question");
+            break;
     }
     return parse(in, dimension, solution_type, height_constraint, orientation, edge_contact);
 }
@@ -87,7 +90,10 @@ int from_menu(std::istream& in){
                 << "(q) Quitter" << std::endl
                 << prompt;
     std::getline(in, input);
-    if(is_number(input))    { return atoi(input.c_str()); }
+    if(is_number(input)) {
+        int question_input = atoi(input.c_str());
+        return (MIN_Q <= question_input && question_input <= MAX_Q) ? question_input : -1; 
+    }
     else if(input == "q")   { return 0; }
     else{ 
         std::cout << "Entrée non valide !" << std::endl;
