@@ -69,7 +69,7 @@ struct OrthogonalPackingSolution {
     static const std::string PYTHON_PLOTTER_FILENAME;
 
     OrthogonalPackingProblem problem;
-    int** solution;
+    int** solution; int* pivot;
     bool exists;
 
     OrthogonalPackingSolution(const OrthogonalPackingProblem&, bool);
@@ -83,9 +83,12 @@ class OrthogonalPackingSolver : public Solver {
 private:
 	OrthogonalPackingProblem problem;
     int**** mu;
+    int* pivot;
 
     bool out_of_bounds(int, int, int, int);
+    bool pivot_out_of_bounds(int, int, int, int);
     bool overlapping(int, int, int, int, int, int, int, int);
+    bool pivot_overlapping(int, int, int, int, int, int, int, int);
     bool carry(int, int, int, int, int, int, int, int);
 
 public:
