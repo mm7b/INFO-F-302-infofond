@@ -23,28 +23,25 @@ std::pair<bool, int> parse_number(const std::string& s){
 }
 
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
+    int n = problem.n; int m = problem.m;
     OrthogonalPackingSolver solver(problem);
     solver.solve();
-    OrthogonalPackingSolution sol = solver.get_solution();
-    if(problem.solution_type == SMALLEST){
+    OrthogonalPackingSolution current_sol = solver.get_solution();
+    OrthogonalPackingSolution previous_sol = current_sol;
+    if(problem.solution_type == SMALLEST && current_sol.exists){
         int minimum_square_size = problem.n;
-        while(sol.exists){
+        while(current_sol.exists){
             solver.addUnit(~Lit(solver.dimension[minimum_square_size - problem.min_n - 1]));
             solver.solve();
             --minimum_square_size;
-            if(!solver.get_solution().exists){
-                break;
-            }
-            sol = solver.get_solution();
+            previous_sol = current_sol;
+            current_sol = solver.get_solution();
         }
         std::cout << "Tiniest square size: " << minimum_square_size << std::endl;
-        sol.print(std::cout);
-        sol.plot(minimum_square_size, minimum_square_size);
-    }else{
-        sol.print(std::cout);
-        sol.plot(problem.n, problem.m);
+        n = minimum_square_size; m = minimum_square_size;
     }
-
+    previous_sol.print(std::cout);
+    previous_sol.plot(n, m);
 }
 
 enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };
