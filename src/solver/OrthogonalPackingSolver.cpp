@@ -133,8 +133,8 @@ OrthogonalPackingSolution::OrthogonalPackingSolution(const OrthogonalPackingSolu
         }
         if(problem.orientation == PIVOT){
            pivot = new int[problem.k]; 
+           std::copy(other.pivot, other.pivot + problem.k, pivot);
         }
-        std::copy(other.pivot, other.pivot + problem.k, pivot);
 }
 
 OrthogonalPackingSolution& OrthogonalPackingSolution::operator=(const OrthogonalPackingSolution& other){
@@ -154,8 +154,9 @@ OrthogonalPackingSolution& OrthogonalPackingSolution::operator=(const Orthogonal
         }
         if(problem.orientation == PIVOT){
            pivot = new int[problem.k]; 
+           std::copy(other.pivot, other.pivot + problem.k, pivot);
         }
-        std::copy(other.pivot, other.pivot + problem.k, pivot);
+        
     }
     return *this;
 }
@@ -343,7 +344,7 @@ void OrthogonalPackingSolver::add_constraints(){
         }
     }
 
-    /* Pivotage des rectangles activé */
+
 
 }
 
@@ -387,23 +388,6 @@ bool OrthogonalPackingSolver::carry(int a, int b, int c, int d, int e, int f, in
             ||  b >= e + problem.widths[l])); 
 }
 
-void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
-    OrthogonalPackingSolution sol = get_solution();
-    if(! sol.exists){
-        out << 0 << std::endl;
-    }
-    else{
-        for(int k = 0; k < problem.k; ++k){
-            out << k + 1 << " ";
-            for(int d = 0; d < problem.dim; ++d){
-                out << sol[k][d] << (d < problem.dim - 1 ? " " : "");
-            }
-            if(!(problem.orientation == FIX)) { out << " " << sol.pivot[k]; }
-            out << std::endl;
-        }
-    }
-}
-
 OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
     vec<Lit> lits;
     if(mu == NULL){ throw std::runtime_error("Unexpected error : prop vector is null"); }
@@ -431,6 +415,23 @@ OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
         }
         addClause(lits);
         return sol;
+    }
+}
+
+void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
+    OrthogonalPackingSolution sol = get_solution();
+    if(! sol.exists){
+        out << 0 << std::endl;
+    }
+    else{
+        for(int k = 0; k < problem.k; ++k){
+            out << k + 1 << " ";
+            for(int d = 0; d < problem.dim; ++d){
+                out << sol[k][d] << (d < problem.dim - 1 ? " " : "");
+            }
+            if(!(problem.orientation == FIX)) { out << " " << sol.pivot[k]; }
+            out << std::endl;
+        }
     }
 }
 
