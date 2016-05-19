@@ -45,33 +45,35 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
 enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };
 
 OrthogonalPackingProblem build_problem(int question, std::istream& in){
-    RectanglesSource rectangles_source; Dimension dimension; 
-    SolutionType solution_type; HeightConstraint height_constraint; 
-    Orientation orientation; EdgeContact edge_contact;
+    RectanglesSource rectangles_source = FROM_INPUT; 
+    Dimension dimension = DIM_2; 
+    SolutionType solution_type = ANY;
+    HeightConstraint height_constraint = FLOAT; 
+    Orientation orientation = FIX;
+    EdgeContact edge_contact = FREE;
     switch(question){
         case Q3:
-            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
             break;
         case Q4:
-            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            solution_type = SMALLEST;
             break;
         case Q5:
-            rectangles_source = GENERATE; dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            rectangles_source = GENERATE; solution_type = SMALLEST;
             break;
         case Q6:
-            rectangles_source = FROM_INPUT; dimension = DIM_3; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            dimension = DIM_3;
             break;
         case Q7:
-            rectangles_source = FROM_INPUT; dimension = DIM_3; solution_type = ANY; height_constraint = NO_FLOAT; orientation = FIX; edge_contact = FREE;
+            dimension = DIM_3; height_constraint = NO_FLOAT;
             break;
         case Q8:
-            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = PIVOT; edge_contact = FREE;
+            orientation = PIVOT;
             break;
         case Q9:
-            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = ANY; height_constraint = FLOAT; orientation = FIX; edge_contact = MINIMUM;
+            edge_contact = MINIMUM;
             break;
         case Q10:
-            rectangles_source = FROM_INPUT; dimension = DIM_2; solution_type = SMALLEST; height_constraint = FLOAT; orientation = FIX; edge_contact = FREE;
+            solution_type = SMALLEST; edge_contact = MINIMUM;
             break;
         default:
             throw std::runtime_error("Unsupported question");
