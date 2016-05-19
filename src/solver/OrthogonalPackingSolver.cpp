@@ -168,6 +168,8 @@ OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem&
 
 void OrthogonalPackingSolver::add_constraints(){
 
+    vec<Lit> lits;
+
     /* Initialisation des prop */
     mu = new int***[problem.k];
     for(int k = 0; k < problem.k; ++k){
@@ -209,7 +211,6 @@ void OrthogonalPackingSolver::add_constraints(){
     }
 
     /* On doit avoir au moins 1 mu à vrai pour un rectangle k donné  */
-    vec<Lit> lits;
     for(int k = 0; k < problem.k; ++k){
         lits.clear();
          for(int a = 0; a < problem.m; ++a){
@@ -258,9 +259,34 @@ void OrthogonalPackingSolver::add_constraints(){
         }
     }
 
-    /* Pas de parallélépipède flottant */
+    /* Pas de parallélépipède flottant. c commence à 1 car pour c = 0 le rectangle ne flotte pas */
     if(problem.is_3d() && problem.height_constraint == NO_FLOAT){
-        
+        for(int k = 0; k < problem.k; ++k){
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    for(int c = 1; c < problem.h; ++c){
+                        lits.clear();
+                        /* Pas de rectangle porteur encore ajouté donc pour l'instant mu[k][a][b][c] ne peut être valué à 1 */
+                        lits.push(~Lit(mu[k][a][b][c]));
+                        for(int l = 0; l < problem.k; ++l){
+                            if(k == l){ continue; }
+                            for(int d = 0; d < problem.m; ++d){
+                                for(int e = 0; e < problem.n; ++e){
+                                    for(int f = 0; f < problem.h; ++f){
+                                        if(carry(a, b, c, d, e, f, k, l)){
+                                            /* mu[k][d][e][f] est porteur de mu[k][a][b][c] donc si 
+                                            mu[k][d][e][f] est valué à 1, mu[k][a][b][c] peut être à son tour valué à 1*/
+                                            lits.push(Lit(mu[l][d][e][f]));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        addClause(lits);
+                    }
+                }
+            }
+        }
     }
 
 }
@@ -279,6 +305,15 @@ bool OrthogonalPackingSolver::overlapping(int a, int b, int c, int d, int e, int
             ||  b >= e + problem.widths[l]
             ||  (problem.is_3d() ? c + problem.heights[k] <= f : false)
             ||  (problem.is_3d() ? c >= f + problem.widths[l] : false));
+}
+
+/* Renvoie vrai si (d, e, f) porte (a, b, c) càd si (a, b) et (d, e) sont superposés (en 2D) et f + hauteur == c */
+bool OrthogonalPackingSolver::carry(int a, int b, int c, int d, int e, int f, int k, int l){
+    return ((c == f + problem.heights[l]) &&
+            !(  a + problem.lengths[k] <= d
+            ||  a >= d + problem.lengths[l]
+            ||  b + problem.widths[k] <= e
+            ||  b >= e + problem.widths[l])); 
 }
 
 void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){

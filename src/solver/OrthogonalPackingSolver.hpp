@@ -86,6 +86,7 @@ private:
 
     bool out_of_bounds(int, int, int, int);
     bool overlapping(int, int, int, int, int, int, int, int);
+    bool carry(int, int, int, int, int, int, int, int);
 
 public:
 	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
