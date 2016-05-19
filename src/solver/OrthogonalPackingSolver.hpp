@@ -17,11 +17,38 @@ std::string to_string(const T& value){
     return oss.str();
 }
 
+enum Dimension {
+    DIM_2 = true,
+    DIM_3 = false
+};
+
+enum SolutionType {
+    SMALLEST = true,
+    ANY = false
+};
+
+enum HeightConstraint {
+    FLOAT = true,
+    NO_FLOAT = false
+};
+
+enum Orientation {
+    PIVOT = true,
+    FIX = false
+};
+
+enum EdgeContact {
+    MINIMUM = true,
+    FREE = false
+};
+
 struct OrthogonalPackingProblem{
     int k, dim, n, m, h;
+    SolutionType solution_type; HeightConstraint height_constraint;
+    Orientation orientation; EdgeContact edge_contact;
     int* lengths; int* widths; int* heights;
 
-    OrthogonalPackingProblem(int, int, int, int, int);
+    OrthogonalPackingProblem(int, int, int, int, int, SolutionType, HeightConstraint, Orientation, EdgeContact);
     OrthogonalPackingProblem(const OrthogonalPackingProblem&);
     OrthogonalPackingProblem& operator=(const OrthogonalPackingProblem&);
     void print(std::ostream& = std::cout);
@@ -34,7 +61,7 @@ struct OrthogonalPackingProblem{
             ParseException(const std::string& msg) : std::runtime_error(msg) {}
         };
         static int next_int(std::string&);
-        static OrthogonalPackingProblem parse(std::istream&, bool = false, bool = true);
+        static OrthogonalPackingProblem parse(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact, bool = true);
     };
 };
 
@@ -42,7 +69,7 @@ struct OrthogonalPackingSolution {
     static const std::string PYTHON_PLOTTER_FILENAME;
 
     OrthogonalPackingProblem problem;
-    int** solution;
+    int** solution; int* pivot;
     bool exists;
 
     OrthogonalPackingSolution(const OrthogonalPackingProblem&, bool);
@@ -56,10 +83,14 @@ class OrthogonalPackingSolver : public Solver {
 private:
 	OrthogonalPackingProblem problem;
     int**** mu;
+    int* pivot;
 
     bool out_of_bounds(int, int, int, int);
+    bool pivot_out_of_bounds(int, int, int, int);
     bool overlapping(int, int, int, int, int, int, int, int);
-    
+    bool pivot_overlapping(int, int, int, int, int, int, int, int);
+    bool carry(int, int, int, int, int, int, int, int);
+
 public:
 	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
