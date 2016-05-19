@@ -19,7 +19,7 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(
         lengths(new int[k]), widths(new int[k]), heights(new int[k]) {}
 
 OrthogonalPackingProblem::OrthogonalPackingProblem(const OrthogonalPackingProblem& other) : 
-    k(other.k), dim(other.dim), n(other.n), m(other.m), h(other.h),
+    k(other.k), dim(other.dim), n(other.n), m(other.m), h(other.h), min_n(other.min_n),
     solution_type(other.solution_type), height_constraint(other.height_constraint), 
     orientation(other.orientation), edge_contact(other.edge_contact),
     lengths(new int[k]), widths(new int[k]), heights(new int[k]) {
@@ -30,7 +30,7 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(const OrthogonalPackingProble
 
 OrthogonalPackingProblem& OrthogonalPackingProblem::operator=(const OrthogonalPackingProblem& other){
     if(this != &other){
-        k = other.k; dim = other.dim; n = other.n; m = other.m; h = other.h;
+        k = other.k; dim = other.dim; n = other.n; m = other.m; h = other.h; min_n = other.min_n;
         solution_type = other.solution_type; height_constraint = other.height_constraint; 
         orientation = other.orientation; edge_contact = other.edge_contact;
         delete[] lengths; delete[] widths; delete[] heights;
@@ -78,9 +78,9 @@ void OrthogonalPackingProblem::selfGenerateNAndM(){
 
 void OrthogonalPackingProblem::generateMinN(){
 	for(int i=0; i<k; i++){
-		n += lengths[i]*widths[i];
+		min_n += lengths[i]*widths[i];
 	}
-	n = sqrt(n);
+	min_n = sqrt(min_n);
 }
 
 /* Parser of OrthogonalPackingProblem definitions */
