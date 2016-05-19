@@ -30,8 +30,6 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
 
 enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };
 
-OrthogonalPackingProblem (*parse)(std::istream&, Dimension, SolutionType, HeightConstraint, Orientation, EdgeContact) = OrthogonalPackingProblem::Parser::parse;
-
 OrthogonalPackingProblem build_problem(int question, std::istream& in){
     Dimension dimension; SolutionType solution_type; 
     HeightConstraint height_constraint; 
@@ -65,12 +63,12 @@ OrthogonalPackingProblem build_problem(int question, std::istream& in){
             throw std::runtime_error("Unsupported question");
             break;
     }
-    return parse(in, dimension, solution_type, height_constraint, orientation, edge_contact);
+    return OrthogonalPackingProblem::Parser::parse(in, dimension, solution_type, height_constraint, orientation, edge_contact);
 }
 
 int from_arg(const std::string& arg, std::istream& in){
     std::pair<bool, int> parsed = parse_number(arg);
-    if(!parsed.first){ throw std::runtime_error("Invalid program argument : please give a question (e.g. q3, q4)"); }
+    if(!parsed.first){ throw std::runtime_error("Invalid program argument : please give a question (e.g. q3, Q3, 3D)"); }
     return parsed.second - 2;
 }
 
