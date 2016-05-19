@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <algorithm>
 #include "OrthogonalPackingSolver.hpp"
 #include <map>
 
@@ -24,8 +25,21 @@ std::pair<bool, int> parse_number(const std::string& s){
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
     OrthogonalPackingSolver solver(problem);
     solver.solve();
-    solver.print_solution(std::cout);
-    solver.plot_solution();
+    if(problem.solution_type == SMALLEST){
+        OrthogonalPackingSolution sol = solver.get_solution();
+        int minimum_square_size = problem.n;
+        while(sol.exists){
+            solver.addUnit(~Lit(solver.dimension[minimum_square_size - problem.min_n - 1]));
+            solver.solve();
+            sol = solver.get_solution();
+            --minimum_square_size;
+        }
+        std::cout << "Tiniest square size: " << minimum_square_size << std::endl;
+    }else{
+        solver.print_solution(std::cout);
+        solver.plot_solution();
+    }
+
 }
 
 enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };

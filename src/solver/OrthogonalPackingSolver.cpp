@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <string>
+#include <math.h>
 #include "OrthogonalPackingSolver.hpp"
 
 
@@ -12,13 +13,13 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(
     int parsed_k, int parsed_dim, int parsed_n, int parsed_m, int parsed_h,
     SolutionType config_solution, HeightConstraint config_height, 
     Orientation config_orientation, EdgeContact config_edge_contact) : 
-        k(parsed_k), dim(parsed_dim), n(parsed_n), m(parsed_m), h(parsed_h),
+        k(parsed_k), dim(parsed_dim), n(parsed_n), m(parsed_m), h(parsed_h), min_n(0),
         solution_type(config_solution), height_constraint(config_height), 
         orientation(config_orientation), edge_contact(config_edge_contact),
         lengths(new int[k]), widths(new int[k]), heights(new int[k]) {}
 
 OrthogonalPackingProblem::OrthogonalPackingProblem(const OrthogonalPackingProblem& other) : 
-    k(other.k), dim(other.dim), n(other.n), m(other.m), h(other.h),
+    k(other.k), dim(other.dim), n(other.n), m(other.m), h(other.h), min_n(other.min_n),
     solution_type(other.solution_type), height_constraint(other.height_constraint), 
     orientation(other.orientation), edge_contact(other.edge_contact),
     lengths(new int[k]), widths(new int[k]), heights(new int[k]) {
@@ -29,7 +30,7 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(const OrthogonalPackingProble
 
 OrthogonalPackingProblem& OrthogonalPackingProblem::operator=(const OrthogonalPackingProblem& other){
     if(this != &other){
-        k = other.k; dim = other.dim; n = other.n; m = other.m; h = other.h;
+        k = other.k; dim = other.dim; n = other.n; m = other.m; h = other.h; min_n = other.min_n;
         solution_type = other.solution_type; height_constraint = other.height_constraint; 
         orientation = other.orientation; edge_contact = other.edge_contact;
         delete[] lengths; delete[] widths; delete[] heights;
@@ -63,6 +64,25 @@ void OrthogonalPackingProblem::print(std::ostream& out){
     out << std::endl;
 }
 
+void OrthogonalPackingProblem::selfGenerateNAndM(){
+    for(int i = 0; i<k; i++){
+        m += lengths[i];
+        n += widths[i];
+    }
+    if (n>m){
+        m = n;
+    }else{
+        n = m;
+    }
+ }
+
+void OrthogonalPackingProblem::generateMinN(){
+	for(int i=0; i<k; i++){
+		min_n += lengths[i]*widths[i];
+	}
+	min_n = sqrt(min_n);
+}
+
 /* Parser of OrthogonalPackingProblem definitions */
 
 int OrthogonalPackingProblem::Parser::next_int(std::string& line){
@@ -85,10 +105,14 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
         std::string input_line;
         std::getline(in, input_line);
         int k = next_int(input_line);
-        std::getline(in, input_line);
-        int n = next_int(input_line);
-        std::getline(in, input_line);
-        int m = next_int(input_line);
+        int n = 0;
+        int m = 0;
+        if(solution == ANY){
+            std::getline(in, input_line);
+            n = next_int(input_line);
+            std::getline(in, input_line);
+            m = next_int(input_line);
+        }
         int h = -1;
         if(dimension == DIM_3){
             std::getline(in, input_line);
@@ -102,6 +126,10 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             problem.lengths[i] = next_int(input_line);
             problem.widths[i] = next_int(input_line);   
             problem.heights[i] = dimension == DIM_3 ? next_int(input_line) : -1;
+        }
+        if(solution == SMALLEST){
+            problem.selfGenerateNAndM();
+            problem.generateMinN();
         }
         return problem;
 }
@@ -178,9 +206,10 @@ OrthogonalPackingSolution::~OrthogonalPackingSolution(){
     }
 }
 
-OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : Solver(), problem(p), mu(NULL), pivot(NULL) {
+OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : 
+	Solver(), problem(p), mu(NULL), pivot(NULL), dimension(NULL), in_bounds(NULL) {
 
-    add_constraints();
+    	add_constraints();
 
 }
 
@@ -214,6 +243,28 @@ void OrthogonalPackingSolver::add_constraints(){
         for(int k = 0; k < problem.k; ++k){
             pivot[k] = newVar();
         }
+    }
+
+    if(problem.solution_type == SMALLEST){
+    	dimension = new int[problem.n - problem.min_n];
+    	for(int n = 0; n < problem.n - problem.min_n; ++n){
+    		dimension[n] = newVar();
+    	}
+    	in_bounds = new int****[problem.k];
+    	for(int k = 0; k < problem.k; ++k){
+	    	in_bounds[k] = new int***[problem.m];
+	        for(int a = 0; a < problem.m; ++a){
+	            in_bounds[k][a] = new int**[problem.n];
+	            for(int b = 0; b < problem.n; ++b){
+                    in_bounds[k][a][b] = new int*[1];
+                    in_bounds[k][a][b][0]= new int[problem.n - problem.min_n];
+                    for(int n = 0; n < problem.n - problem.min_n; ++n){
+                    	in_bounds[k][a][b][0][n] = newVar();
+                    }
+
+	            }
+	        }
+    	}
     }
 
     /* On ne peut avoir 2 mu à vrai en même temps pour un même k, 
@@ -254,12 +305,26 @@ void OrthogonalPackingSolver::add_constraints(){
             for(int b = 0; b < problem.n; ++b){
                 for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
                     if(problem.orientation == FIX){
-                        if(out_of_bounds(a, b, c, k)){
-                            addUnit(~Lit(mu[k][a][b][c]));
+                    	if(problem.solution_type == SMALLEST){
+                    		lits.clear();
+                    		lits.push(~Lit(mu[k][a][b][c]));
+                    		for(int n = 0; n<problem.n-problem.min_n ; ++n){
+                    			if(out_of_bounds(a, b, c, k, n + problem.min_n, n + problem.min_n)){
+									addUnit(~Lit(in_bounds[k][a][b][c][n]));
+                    			}else{
+									addBinary(~Lit(in_bounds[k][a][b][c][n]), Lit(dimension[n]));
+								}
+								lits.push(Lit(in_bounds[k][a][b][c][n]));
+                    		}
+                    		addClause(lits);
+                    	}else{
+                        	if(out_of_bounds(a, b, c, k, problem.n, problem.m)){
+                            	addUnit(~Lit(mu[k][a][b][c]));
+                        	}
                         }
                     }
                     else{
-                        bool out = out_of_bounds(a, b, c, k);
+                        bool out = out_of_bounds(a, b, c, k, problem.n, problem.m);
                         bool pivot_out = pivot_out_of_bounds(a, b, c, k);
                         if(out && pivot_out){
                             addUnit(~Lit(mu[k][a][b][c]));
@@ -346,9 +411,9 @@ void OrthogonalPackingSolver::add_constraints(){
 }
 
 /* Inutile de vérifier a >= 0 ni b >= 0 ni c >= 0 car ce sont des indices donc >= 0 par définition */
-bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int c, int k){
-    return !(  a + problem.lengths[k] <= problem.m 
-            && b + problem.widths[k] <= problem.n
+bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int c, int k, int n, int m){
+    return !(  a + problem.lengths[k] <= m 
+            && b + problem.widths[k] <= n
             && (problem.is_3d() ? c + problem.heights[k] <= problem.h : true));
 }
 
@@ -386,13 +451,11 @@ bool OrthogonalPackingSolver::carry(int a, int b, int c, int d, int e, int f, in
 }
 
 OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
-    vec<Lit> lits;
     if(mu == NULL){ throw std::runtime_error("Unexpected error : prop vector is null"); }
     if(! okay()){
         return OrthogonalPackingSolution(problem, false);
     }
     else{
-        lits.clear();
         OrthogonalPackingSolution sol(problem, true);
         for(int k = 0; k < problem.k; ++k){
             for(int a = 0; a < problem.m; ++a){
@@ -401,16 +464,12 @@ OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
                         if(model[mu[k][a][b][c]] == l_True){
                             sol[k][0] = a; sol[k][1] = b;
                             if(problem.is_3d()){ sol[k][2] = c; }
-                            lits.push(~Lit(mu[k][a][b][c]));
-                        } else{
-                            lits.push(Lit(mu[k][a][b][c]));
                         }
                     }
                 }
             }
             if(!(problem.orientation == FIX)){ sol.pivot[k] = (model[pivot[k]] == l_True); }
         }
-        addClause(lits);
         return sol;
     }
 }
@@ -510,5 +569,21 @@ OrthogonalPackingSolver::~OrthogonalPackingSolver(){
     }
     if(pivot != NULL){
         delete[] pivot;
+    }
+    if(dimension != NULL){
+    	delete[] dimension;
+    }
+    if(in_bounds != NULL){
+        for(int k = 0; k < problem.k; ++k){
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                	delete[] in_bounds[k][a][b][0];
+                    delete[] in_bounds[k][a][b];
+                }
+                delete[] in_bounds[k][a];
+            }
+            delete[] in_bounds[k];
+        }
+        delete[] in_bounds;
     }
 }
