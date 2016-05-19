@@ -29,7 +29,7 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
         OrthogonalPackingSolution sol = solver.get_solution();
         int minimum_square_size = problem.n;
         while(sol.exists){
-            solver.addUnit(~Lit(solver.dimension[minimum_square_size - problem.min_n]));
+            solver.addUnit(~Lit(solver.dimension[minimum_square_size - problem.min_n - 1]));
             solver.solve();
             sol = solver.get_solution();
             --minimum_square_size;
