@@ -13,12 +13,14 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(
     SolutionType config_solution, HeightConstraint config_height, 
     Orientation config_orientation, EdgeContact config_edge_contact) : 
         k(parsed_k), dim(parsed_dim), n(parsed_n), m(parsed_m), h(parsed_h),
-        solution(config_solution), height(config_height), orientation(config_orientation), edge_contact(config_edge_contact),
+        solution_type(config_solution), height_constraint(config_height), 
+        orientation(config_orientation), edge_contact(config_edge_contact),
         lengths(new int[k]), widths(new int[k]), heights(new int[k]) {}
 
 OrthogonalPackingProblem::OrthogonalPackingProblem(const OrthogonalPackingProblem& other) : 
     k(other.k), dim(other.dim), n(other.n), m(other.m), h(other.h),
-    solution(other.solution), height(other.height), orientation(other.orientation), edge_contact(other.edge_contact),
+    solution_type(other.solution_type), height_constraint(other.height_constraint), 
+    orientation(other.orientation), edge_contact(other.edge_contact),
     lengths(new int[k]), widths(new int[k]), heights(new int[k]) {
         std::copy(other.lengths, other.lengths + k, lengths);
         std::copy(other.widths, other.widths + k, widths);
@@ -28,7 +30,8 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(const OrthogonalPackingProble
 OrthogonalPackingProblem& OrthogonalPackingProblem::operator=(const OrthogonalPackingProblem& other){
     if(this != &other){
         k = other.k; dim = other.dim; n = other.n; m = other.m; h = other.h;
-        solution = other.solution; height = other.height; orientation = other.orientation; edge_contact = other.edge_contact;
+        solution_type = other.solution_type; height_constraint = other.height_constraint; 
+        orientation = other.orientation; edge_contact = other.edge_contact;
         delete[] lengths; delete[] widths; delete[] heights;
         lengths = new int[k]; widths = new int[k]; heights = new int[k];
         std::copy(other.lengths, other.lengths + k, lengths);
@@ -92,7 +95,6 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             h = next_int(input_line);
         }
         OrthogonalPackingProblem problem(k, dim, n, m, h, solution, height, orientation, edge_contact);
-        std::cout << "k:"<<k<<"n:"<<n<<"m:"<<m<<"h:"<<h<<std::endl;
         for(int i = 0; i < k; ++i){
             std::getline(in, input_line);
             int index = next_int(input_line);
@@ -100,7 +102,6 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             problem.lengths[i] = next_int(input_line);
             problem.widths[i] = next_int(input_line);   
             problem.heights[i] = dimension == DIM_3 ? next_int(input_line) : -1;
-            std::cout << "l:"<<problem.lengths[i]<<"w:"<<problem.widths[i]<<"h"<<problem.heights[i]<<std::endl;
         }
         return problem;
 }
@@ -257,6 +258,10 @@ void OrthogonalPackingSolver::add_constraints(){
         }
     }
 
+    /* Pas de parallélépipède flottant */
+    if(problem.is_3d() && problem.height_constraint == NO_FLOAT){
+        
+    }
 
 }
 

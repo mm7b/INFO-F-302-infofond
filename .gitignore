@@ -1,3 +1,10 @@
+# IGNORE ALL
+*
+# UNIGNORE ALL WITH EXTENSIONS
+!*.*
+# UNIGNORE DIRS
+!*/
+
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
@@ -242,9 +249,9 @@ TSWLatexianTemp*
 # KBibTeX
 *~[0-9]*
 
+
 main
-Main
+solver/solver
 orthogonal_packing
-solver
 *.o
 *.dSYM/

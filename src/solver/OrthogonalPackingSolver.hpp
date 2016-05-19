@@ -44,7 +44,7 @@ enum EdgeContact {
 
 struct OrthogonalPackingProblem{
     int k, dim, n, m, h;
-    SolutionType solution; HeightConstraint height;
+    SolutionType solution_type; HeightConstraint height_constraint;
     Orientation orientation; EdgeContact edge_contact;
     int* lengths; int* widths; int* heights;
 
