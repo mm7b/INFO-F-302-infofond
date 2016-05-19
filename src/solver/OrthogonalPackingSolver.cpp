@@ -376,6 +376,9 @@ void OrthogonalPackingSolver::plot_solution(){
 OrthogonalPackingSolver::~OrthogonalPackingSolver(){
     for(int k = 0; k < problem.k; ++k){
         for(int a = 0; a < problem.m; ++a){
+            for(int b = 0; b < problem.n; ++b){
+                delete[] mu[k][a][b];
+            }
             delete[] mu[k][a];
         }
         delete[] mu[k];
