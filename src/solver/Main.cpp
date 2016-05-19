@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <algorithm>
 #include "OrthogonalPackingSolver.hpp"
 #include <map>
 
@@ -21,35 +22,39 @@ std::pair<bool, int> parse_number(const std::string& s){
     else{ return std::pair<bool, int>(true, atoi(number_str.c_str())); }
 }
 
+int getMaxNOrMSize(OrthogonalPackingSolution& sol){
+    int max_size = -1;
+    for (int i = 0; i < sol.problem.k; i++){
+        int actual_size = std::max(sol[i][0]+sol.problem.lengths[i], sol[i][1]+sol.problem.widths[i]);
+        if(actual_size > max_size){
+            max_size = actual_size;
+        }
+    }
+    return max_size;
+}
+
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
     OrthogonalPackingSolver solver(problem);
     solver.solve();
     if(problem.solution_type == SMALLEST){
-        std::cout << "in smallest" << std::endl;
-        OrthogonalPackingSolution sol = solver.get_solution();
+        OrthogonalPackingSolution tiniest_square_sol = solver.get_solution();
+        int minimum_square_size = getMaxNOrMSize(tiniest_square_sol);
+        OrthogonalPackingSolution sol = tiniest_square_sol;
         while(sol.exists){
             solver.solve();
             sol = solver.get_solution();
+            int actual_size = getMaxNOrMSize(sol);
+            if(sol.exists && actual_size < minimum_square_size){
+                tiniest_square_sol = sol;
+                minimum_square_size = actual_size;
+            }
         }
+        std::cout << "Tiniest square size: " << minimum_square_size << std::endl;
     }else{
         solver.print_solution(std::cout);
         solver.plot_solution();
     }
 
-}
-
-void tiniestSquare(const OrthogonalPackingProblem& problem){
-	OrthogonalPackingSolver solver(problem);
-	solver.solve();
-	int num = 0;
-	solver.print_solution(std::cout);
-	while(solver.get_solution().exists && num < 21){
-		num++;
-		solver.solve();
-	}
-	solver.print_solution(std::cout);
-	solver.plot_solution();
-	std::cout << num << std::endl;
 }
 
 enum ProblemType { Q3 = 1, Q4 = 2, Q5 = 3, Q6 = 4, Q7 = 5, Q8 = 6, Q9 = 7, Q10 = 8, MIN_Q = Q3, MAX_Q = Q10 };
