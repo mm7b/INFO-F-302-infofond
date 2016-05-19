@@ -580,9 +580,7 @@ OrthogonalPackingSolver::~OrthogonalPackingSolver(){
         for(int k = 0; k < problem.k; ++k){
             for(int a = 0; a < problem.m; ++a){
                 for(int b = 0; b < problem.n; ++b){
-                	for(int n = 0; n < problem.n - problem.min_n; ++n){
-                		delete[] in_bounds[k][a][b][0];
-                	}
+                	delete[] in_bounds[k][a][b][0];
                     delete[] in_bounds[k][a][b];
                 }
                 delete[] in_bounds[k][a];
