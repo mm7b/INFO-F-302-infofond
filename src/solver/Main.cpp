@@ -24,8 +24,17 @@ std::pair<bool, int> parse_number(const std::string& s){
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
     OrthogonalPackingSolver solver(problem);
     solver.solve();
-    solver.print_solution(std::cout);
-    solver.plot_solution();
+    if(problem.solution_type == SMALLEST){
+        std::cout << "in smallest" << std::endl;
+        OrthogonalPackingSolution sol = solver.get_solution();
+        while(sol.exists){
+            solver.solve();
+            sol = solver.get_solution();
+        }
+    }else{
+        solver.print_solution(std::cout);
+        solver.plot_solution();
+    }
 
 }
 
