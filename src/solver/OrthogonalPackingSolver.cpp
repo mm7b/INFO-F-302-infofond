@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <string>
+#include <math.h>
 #include "OrthogonalPackingSolver.hpp"
 
 
@@ -12,7 +13,7 @@ OrthogonalPackingProblem::OrthogonalPackingProblem(
     int parsed_k, int parsed_dim, int parsed_n, int parsed_m, int parsed_h,
     SolutionType config_solution, HeightConstraint config_height, 
     Orientation config_orientation, EdgeContact config_edge_contact) : 
-        k(parsed_k), dim(parsed_dim), n(parsed_n), m(parsed_m), h(parsed_h),
+        k(parsed_k), dim(parsed_dim), n(parsed_n), m(parsed_m), h(parsed_h), min_n(0),
         solution_type(config_solution), height_constraint(config_height), 
         orientation(config_orientation), edge_contact(config_edge_contact),
         lengths(new int[k]), widths(new int[k]), heights(new int[k]) {}
@@ -75,6 +76,13 @@ void OrthogonalPackingProblem::selfGenerateNAndM(){
     }
  }
 
+void OrthogonalPackingProblem::generateMinN(){
+	for(int i=0; i<k; i++){
+		n += lengths[i]*widths[i];
+	}
+	n = sqrt(n);
+}
+
 /* Parser of OrthogonalPackingProblem definitions */
 
 int OrthogonalPackingProblem::Parser::next_int(std::string& line){
@@ -121,6 +129,7 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
         }
         if(solution == SMALLEST){
             problem.selfGenerateNAndM();
+            problem.generateMinN();
         }
         return problem;
 }
@@ -235,6 +244,22 @@ void OrthogonalPackingSolver::add_constraints(){
         }
     }
 
+    if(problem.solution_type == SMALLEST){
+    	dimension = new int[problem.n-problem.min_n];
+    	in_bounds = new int****[problem.k];
+    	for(int k = 0; k < problem.k; ++k){
+	    	in_bounds[k] = new int**[problem.m];
+	        for(int a = 0; a < problem.m; ++a){
+	            in_bounds[k][a] = new int*[problem.n];
+	            for(int b = 0; b < problem.n; ++b){
+                    in_bounds[k][a][b] = new int[1];
+                    in_bounds[k][a][b][0] = newVar();
+                    
+	            }
+	        }
+    }
+    }
+
     /* On ne peut avoir 2 mu à vrai en même temps pour un même k, 
     un rectangle k ne pouvant avoir qu'une seule position */
     for(int k = 0; k < problem.k; ++k){
@@ -273,12 +298,26 @@ void OrthogonalPackingSolver::add_constraints(){
             for(int b = 0; b < problem.n; ++b){
                 for(int c = 0; c < (problem.is_3d() ? problem.h : 1); ++c){
                     if(problem.orientation == FIX){
-                        if(out_of_bounds(a, b, c, k)){
-                            addUnit(~Lit(mu[k][a][b][c]));
+                    	if(problem.solution_type == SMALLEST){
+                    		lits.clear();
+                    		lits.push(~Lit(mu[k][a][b][c]));
+                    		for(int n = 0; n<problem.n-problem.min_n ; ++n){
+                    			if(out_of_bounds(a, b, c, k, n+min_n)){
+									addUnit(~Lit(in_bounds[k][a][b][c][n]));
+                    			}else{
+									addBinary(~Lit(in_bounds[k][a][b][c][n]), Lit(dimension[n]));
+								}
+								lits.push(Lit[in_bounds[k][a][b][c][n]]);
+                    		}
+                    		addClause(lits);
+                    	}else{
+                        	if(out_of_bounds(a, b, c, k, problem.n, problem.m)){
+                            	addUnit(~Lit(mu[k][a][b][c]));
+                        	}
                         }
                     }
                     else{
-                        bool out = out_of_bounds(a, b, c, k);
+                        bool out = out_of_bounds(a, b, c, k, problem.n, problem.m);
                         bool pivot_out = pivot_out_of_bounds(a, b, c, k);
                         if(out && pivot_out){
                             addUnit(~Lit(mu[k][a][b][c]));
@@ -368,9 +407,9 @@ void OrthogonalPackingSolver::add_constraints(){
 }
 
 /* Inutile de vérifier a >= 0 ni b >= 0 ni c >= 0 car ce sont des indices donc >= 0 par définition */
-bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int c, int k){
-    return !(  a + problem.lengths[k] <= problem.m 
-            && b + problem.widths[k] <= problem.n
+bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int c, int k, int n, int m){
+    return !(  a + problem.lengths[k] <= m 
+            && b + problem.widths[k] <= n
             && (problem.is_3d() ? c + problem.heights[k] <= problem.h : true));
 }
 

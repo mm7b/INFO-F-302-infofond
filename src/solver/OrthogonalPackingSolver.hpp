@@ -43,7 +43,7 @@ enum EdgeContact {
 };
 
 struct OrthogonalPackingProblem{
-    int k, dim, n, m, h;
+    int k, dim, n, m, h, min_n;
     SolutionType solution_type; HeightConstraint height_constraint;
     Orientation orientation; EdgeContact edge_contact;
     int* lengths; int* widths; int* heights;
@@ -53,6 +53,7 @@ struct OrthogonalPackingProblem{
     OrthogonalPackingProblem& operator=(const OrthogonalPackingProblem&);
     void print(std::ostream& = std::cout);
     void selfGenerateNAndM();
+    void generateMinN();
     bool is_3d() const { return dim == 3; }
     virtual ~OrthogonalPackingProblem();
 
@@ -84,8 +85,9 @@ private:
 	OrthogonalPackingProblem problem;
     int**** mu;
     int* pivot;
+    int* dimension;
 
-    bool out_of_bounds(int, int, int, int);
+    bool out_of_bounds(int, int, int, int, int, int);
     bool pivot_out_of_bounds(int, int, int, int);
     bool overlapping(int, int, int, int, int, int, int, int);
     bool pivot_overlapping(int, int, int, int, int, int, int, int);
