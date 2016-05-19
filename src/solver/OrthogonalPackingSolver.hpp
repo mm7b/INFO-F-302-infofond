@@ -82,11 +82,13 @@ struct OrthogonalPackingSolution {
     OrthogonalPackingSolution(const OrthogonalPackingSolution&);
     OrthogonalPackingSolution& operator=(const OrthogonalPackingSolution&);
     int* operator[](int);
+	void print(std::ostream&);
+    void plot(int, int);
     virtual ~OrthogonalPackingSolution();
 };
 
 struct OrthogonalPackingSolver : public Solver {
-	OrthogonalPackingProblem problem;
+    OrthogonalPackingProblem problem;
     int**** mu;
     int* pivot;
     int* dimension;
@@ -98,14 +100,12 @@ struct OrthogonalPackingSolver : public Solver {
     bool pivot_overlapping(int, int, int, int, int, int, int, int);
     bool carry(int, int, int, int, int, int, int, int);
 
-	OrthogonalPackingSolver(const OrthogonalPackingProblem&);
+    OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
-	void add_constraints();
+    void add_constraints();
 
     OrthogonalPackingSolution get_solution();
 
-	void print_solution(std::ostream&);
-    void plot_solution();
 
 	virtual ~OrthogonalPackingSolver();
 };

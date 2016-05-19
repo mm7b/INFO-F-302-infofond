@@ -120,14 +120,20 @@ OrthogonalPackingProblem OrthogonalPackingProblem::Parser::parse(
             h = next_int(input_line);
         }
         OrthogonalPackingProblem problem(k, dim, n, m, h, solution, height, orientation, edge_contact);
-        for(int i = 0; i < k; ++i){
-            std::getline(in, input_line);
-            int index = next_int(input_line);
-            if(index != i + 1) { throw ParseException("Wrong index : expected " + to_string(i + 1) + " found " + to_string(index) + " instead"); }
-            problem.lengths[i] = next_int(input_line);
-            problem.widths[i] = next_int(input_line);   
-            problem.heights[i] = dimension == DIM_3 ? next_int(input_line) : -1;
-        }
+    	for(int i = 0; i < k; ++i){
+	        if(rectangles_source == FROM_INPUT){
+		            std::getline(in, input_line);
+		            int index = next_int(input_line);
+		            if(index != i + 1) { throw ParseException("Wrong index : expected " + to_string(i + 1) + " found " + to_string(index) + " instead"); }
+		            problem.lengths[i] = next_int(input_line);
+		            problem.widths[i] = next_int(input_line);   
+		            problem.heights[i] = dimension == DIM_3 ? next_int(input_line) : -1;
+		    }else{
+		    	problem.lengths[i] = i+1;
+		    	problem.widths[i] = i+1;
+		    	problem.heights[i] = -1;
+	    	}
+	    }
         if(solution == SMALLEST){
             problem.selfGenerateNAndM();
             problem.generateMinN();
@@ -193,6 +199,84 @@ OrthogonalPackingSolution& OrthogonalPackingSolution::operator=(const Orthogonal
 int* OrthogonalPackingSolution::operator[](int i){
     if(i < 0 || i >= problem.k) { throw std::out_of_range("Rectangle " + to_string(i) + " does not exist"); }
     return solution[i];
+}
+
+void OrthogonalPackingSolution::print(std::ostream& out = std::cout){
+    if(! exists){
+        out << 0 << std::endl;
+    }
+    else{
+        for(int k = 0; k < problem.k; ++k){
+            out << k + 1 << " ";
+            for(int d = 0; d < problem.dim; ++d){
+                out << solution[k][d] << (d < problem.dim - 1 ? " " : "");
+            }
+            if(!(problem.orientation == FIX)) { out << " " << pivot[k]; }
+            out << std::endl;
+        }
+    }
+}
+
+void OrthogonalPackingSolution::plot(int n, int m){
+    if(exists){
+        std::ostringstream oss;
+        oss << "python " << OrthogonalPackingSolution::PYTHON_PLOTTER_FILENAME << " " << problem.k << " " << n << " " 
+            << m << " " << problem.h;
+
+        oss << " \"[";
+        for(int k = 0; k < problem.k; ++k){
+            oss << "(";
+            for(int d = 0; d < problem.dim; ++d){
+                oss << (d == problem.dim - 1 ? to_string(solution[k][d]) + ")" : to_string(solution[k][d]) + ", ");
+            }
+            if(k < problem.k - 1) { oss << ", "; }
+        }
+        oss << "]\"";
+        
+        int length, width;
+
+        oss << " \"[";
+        for(int k = 0; k < problem.k; ++k){ 
+            if(!(problem.orientation == FIX)){
+                length = (pivot[k] ? problem.widths[k] : problem.lengths[k]);
+            }
+            else{ length = problem.lengths[k]; }
+            oss << (k == problem.k - 1 ? to_string(length) : to_string(length) + ", ");
+        }
+        oss << "]\"";
+        
+        oss << " \"[";
+        for(int k = 0; k < problem.k; ++k){
+            if(!(problem.orientation == FIX)){
+                width = (pivot[k] ? problem.lengths[k] : problem.widths[k]);
+            }
+            else{ width = problem.widths[k]; }
+            oss << (k == problem.k - 1 ? to_string(width) : to_string(width) + ", ");
+        }
+        oss << "]\"";
+
+        if(problem.dim == 3){
+            oss << " \"[";
+            for(int k = 0; k < problem.k; ++k){ oss << (k == problem.k - 1 ? to_string(problem.heights[k]) : to_string(problem.heights[k]) + ", "); }
+            oss << "]\"";
+        }
+
+        oss << " --color=b" << " --alpha=0.4";
+
+        pid_t pid = fork();
+        if(pid < 0){
+            throw std::runtime_error("Failed to execute plotting command");
+        }
+        else if (pid == 0){
+            if(system(NULL)){
+                system(oss.str().c_str());
+                _exit(EXIT_SUCCESS);
+            }
+            else{
+                _exit(EXIT_FAILURE);
+            }
+        }
+    }
 }
 
 OrthogonalPackingSolution::~OrthogonalPackingSolution(){ 
@@ -472,86 +556,6 @@ OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){
             if(!(problem.orientation == FIX)){ sol.pivot[k] = (model[pivot[k]] == l_True); }
         }
         return sol;
-    }
-}
-
-void OrthogonalPackingSolver::print_solution(std::ostream& out = std::cout){
-    OrthogonalPackingSolution sol = get_solution();
-    if(! sol.exists){
-        out << 0 << std::endl;
-    }
-    else{
-        for(int k = 0; k < problem.k; ++k){
-            out << k + 1 << " ";
-            for(int d = 0; d < problem.dim; ++d){
-                out << sol[k][d] << (d < problem.dim - 1 ? " " : "");
-            }
-            if(!(problem.orientation == FIX)) { out << " " << sol.pivot[k]; }
-            out << std::endl;
-        }
-    }
-}
-
-void OrthogonalPackingSolver::plot_solution(){
-    OrthogonalPackingSolution sol = get_solution();
-    if(sol.exists){
-        std::ostringstream oss;
-        oss << "python " << OrthogonalPackingSolution::PYTHON_PLOTTER_FILENAME << " " << problem.k << " " << problem.n << " " 
-            << problem.m << " " << problem.h;
-
-        oss << " \"[";
-        for(int k = 0; k < problem.k; ++k){
-            oss << "(";
-            for(int d = 0; d < problem.dim; ++d){
-                oss << (d == problem.dim - 1 ? to_string(sol[k][d]) + ")" : to_string(sol[k][d]) + ", ");
-            }
-            if(k < problem.k - 1) { oss << ", "; }
-        }
-        oss << "]\"";
-        
-        int length, width;
-
-        oss << " \"[";
-        for(int k = 0; k < problem.k; ++k){ 
-            if(!(problem.orientation == FIX)){
-                length = (sol.pivot[k] ? problem.widths[k] : problem.lengths[k]);
-            }
-            else{ length = problem.lengths[k]; }
-            oss << (k == problem.k - 1 ? to_string(length) : to_string(length) + ", ");
-        }
-        oss << "]\"";
-        
-        oss << " \"[";
-        for(int k = 0; k < problem.k; ++k){
-            if(!(problem.orientation == FIX)){
-                width = (sol.pivot[k] ? problem.lengths[k] : problem.widths[k]);
-            }
-            else{ width = problem.widths[k]; }
-            oss << (k == problem.k - 1 ? to_string(width) : to_string(width) + ", ");
-        }
-        oss << "]\"";
-
-        if(problem.dim == 3){
-            oss << " \"[";
-            for(int k = 0; k < problem.k; ++k){ oss << (k == problem.k - 1 ? to_string(problem.heights[k]) : to_string(problem.heights[k]) + ", "); }
-            oss << "]\"";
-        }
-
-        oss << " --color=b" << " --alpha=0.4";
-
-        pid_t pid = fork();
-        if(pid < 0){
-            throw std::runtime_error("Failed to execute plotting command");
-        }
-        else if (pid == 0){
-            if(system(NULL)){
-                system(oss.str().c_str());
-                _exit(EXIT_SUCCESS);
-            }
-            else{
-                _exit(EXIT_FAILURE);
-            }
-        }
     }
 }
 
