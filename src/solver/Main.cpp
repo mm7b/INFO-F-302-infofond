@@ -24,17 +24,13 @@ std::pair<bool, int> parse_number(const std::string& s){
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
     OrthogonalPackingSolver solver(problem);
     solver.solve();
-    std::cout << "avant print" << std::endl;
     solver.print_solution(std::cout);
-    std::cout << "apres print" << std::endl;
-
     solver.plot_solution();
-    std::cout << "apres plot print" << std::endl;
 
 }
 
-void tiniestSquare(){
-	OrthogonalPackingSolver solver(OrthogonalPackingProblem::Parser::parse(std::cin, false, false));
+void tiniestSquare(const OrthogonalPackingProblem& problem){
+	OrthogonalPackingSolver solver(problem);
 	solver.solve();
 	int num = 0;
 	solver.print_solution(std::cout);
