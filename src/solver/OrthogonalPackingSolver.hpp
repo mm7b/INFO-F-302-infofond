@@ -86,6 +86,7 @@ private:
     int**** mu;
     int* pivot;
     int* dimension;
+    int***** in_bounds;
 
     bool out_of_bounds(int, int, int, int, int, int);
     bool pivot_out_of_bounds(int, int, int, int);

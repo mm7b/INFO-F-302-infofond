@@ -206,9 +206,10 @@ OrthogonalPackingSolution::~OrthogonalPackingSolution(){
     }
 }
 
-OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : Solver(), problem(p), mu(NULL), pivot(NULL) {
+OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem& p) : 
+	Solver(), problem(p), mu(NULL), pivot(NULL), dimension(NULL), in_bounds(NULL) {
 
-    add_constraints();
+    	add_constraints();
 
 }
 
@@ -245,19 +246,25 @@ void OrthogonalPackingSolver::add_constraints(){
     }
 
     if(problem.solution_type == SMALLEST){
-    	dimension = new int[problem.n-problem.min_n];
+    	dimension = new int[problem.n - problem.min_n];
+    	for(int n = 0; n < problem.n - problem.min_n; ++n){
+    		dimension[n] = newVar();
+    	}
     	in_bounds = new int****[problem.k];
     	for(int k = 0; k < problem.k; ++k){
-	    	in_bounds[k] = new int**[problem.m];
+	    	in_bounds[k] = new int***[problem.m];
 	        for(int a = 0; a < problem.m; ++a){
-	            in_bounds[k][a] = new int*[problem.n];
+	            in_bounds[k][a] = new int**[problem.n];
 	            for(int b = 0; b < problem.n; ++b){
-                    in_bounds[k][a][b] = new int[1];
-                    in_bounds[k][a][b][0] = newVar();
-                    
+                    in_bounds[k][a][b] = new int*[1];
+                    in_bounds[k][a][b][0]= new int[problem.n - problem.min_n];
+                    for(int n = 0; n < problem.n - problem.min_n, ++n){
+                    	in_bounds[k][a][b][0][n] = newVar();
+                    }
+
 	            }
 	        }
-    }
+    	}
     }
 
     /* On ne peut avoir 2 mu à vrai en même temps pour un même k, 
@@ -571,5 +578,23 @@ OrthogonalPackingSolver::~OrthogonalPackingSolver(){
     }
     if(pivot != NULL){
         delete[] pivot;
+    }
+    if(dimension != NULL){
+    	delete[] dimension;
+    }
+    if(in_bounds != NULL){
+        for(int k = 0; k < problem.k; ++k){
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                	for(int n = 0; n < problem.n - problem.min_n; ++n){
+                		delete[] in_bounds[k][a][b][0];
+                	}
+                    delete[] in_bounds[k][a][b];
+                }
+                delete[] in_bounds[k][a];
+            }
+            delete[] in_bounds[k];
+        }
+        delete[] in_bounds;
     }
 }
