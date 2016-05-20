@@ -437,7 +437,7 @@ void OrthogonalPackingSolver::add_constraints(){
                     addClause(lits);
                 }
             }
-            /* k est dans les bornes si on dimension[n] est vrai et in_bounds[k][a][b][n] est vrai */
+            /* k est dans les bornes si dimension[n] est vrai et in_bounds[k][a][b][n] est vrai */
             for(int n_index = 0; n_index < problem.n - problem.min_n; ++n_index){
                 int n = n_index + problem.min_n;
                 /* in_bounds est faux si mu[k][a][b] est hors bornes */
@@ -451,12 +451,19 @@ void OrthogonalPackingSolver::add_constraints(){
                         addUnit(~Lit(in_bounds[k][a][b][0][n_index]));
                     }
                 }
-                /* si in_bounds est vrai, alors dimension[n] doit être vrai, càd qu'on accepte cette dimension */
-                for(int a = 0; a < std::max(n - problem.lengths[k] + 1, 0); ++a){
-                    for(int b = 0; b < std::max(n - problem.widths[k] + 1, 0); ++b){
-                        addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
+                for(int a = 0; a < n; ++a){
+                    for(int b = 0; b < n; ++b){
+                        if(!out_of_bounds(a, b, 0, k, n, n)){
+                             addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
+                        }
                     }
                 }
+                /* si in_bounds est vrai, alors dimension[n] doit être vrai, càd qu'on accepte cette dimension */
+                // for(int a = 0; a < std::max(n - problem.lengths[k] + 1, 0); ++a){
+                //     for(int b = 0; b < std::max(n - problem.widths[k] + 1, 0); ++b){
+                //         addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
+                //     }
+                // }
             }
         }
     }
@@ -499,8 +506,8 @@ void OrthogonalPackingSolver::add_constraints(){
     else{
         for(int k = 0; k < problem.k; ++k){
             if(problem.orientation == PIVOT){
-                for(int a = 0; a <= problem.m - problem.lengths[k], 0; ++a){
-                    for(int b = 0; b <= problem.n - problem.widths[k], 0; ++b){
+                for(int a = 0; a <= problem.m - problem.lengths[k]; ++a){
+                    for(int b = 0; b <= problem.n - problem.widths[k]; ++b){
                         for(int l = k + 1; l < problem.k; ++l){
                             for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.lengths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
                                 for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.widths[k] && (e <= problem.n - problem.widths[l]); ++e){
@@ -523,8 +530,8 @@ void OrthogonalPackingSolver::add_constraints(){
                 }
             }
             else{
-                for(int a = 0; a <= std::max(problem.m - problem.lengths[k], 0); ++a){
-                    for(int b = 0; b <= std::max(problem.n - problem.widths[k]); ++b){
+                for(int a = 0; a <= problem.m - problem.lengths[k]; ++a){
+                    for(int b = 0; b <= problem.n - problem.widths[k]; ++b){
                         for(int l = k + 1; l < problem.k; ++l){
                             for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.lengths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
                                 for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.widths[k] && (e <= problem.n - problem.widths[l]); ++e){
