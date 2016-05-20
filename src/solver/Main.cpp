@@ -2,8 +2,9 @@
 #include <sstream>
 #include <utility>
 #include <algorithm>
-#include "OrthogonalPackingSolver.hpp"
 #include <map>
+#include <ctime>
+#include "OrthogonalPackingSolver.hpp"
 
 bool is_number(const std::string& s){
     std::string::const_iterator it = s.begin();
@@ -23,8 +24,10 @@ std::pair<bool, int> parse_number(const std::string& s){
 }
 
 void orthogonal_packing(const OrthogonalPackingProblem& problem){
+    const clock_t t0 = clock();
     int n = problem.n; int m = problem.m;
     OrthogonalPackingSolver solver(problem);
+    solver.verbosity = 0;
     solver.solve();
     OrthogonalPackingSolution current_sol = solver.get_solution();
     OrthogonalPackingSolution previous_sol = current_sol;
@@ -40,6 +43,7 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
         std::cout << "Tiniest square size: " << minimum_square_size << std::endl;
         n = minimum_square_size; m = minimum_square_size;
     }
+    std::cout << "Execution time : " << float(clock() - t0) / CLOCKS_PER_SEC << std::endl;
     previous_sol.print(std::cout);
     previous_sol.plot(n, m);
 }

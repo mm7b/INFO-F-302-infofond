@@ -7,8 +7,11 @@
 #include <stdlib.h>
 #include <exception>
 #include <stdexcept>
+#include <bitset>
 
 #include "Solver.hpp"
+
+#define BITSET_SIZE 32
 
 template<typename T>
 std::string to_string(const T& value){
@@ -93,6 +96,10 @@ struct OrthogonalPackingSolver : public Solver {
     int* pivot;
     int* dimension;
     int***** in_bounds;
+
+    /* Binary encoding for exactly one constraint */
+    int* b_encoding;
+    std::bitset<BITSET_SIZE>*** binaries;
 
     bool out_of_bounds(int, int, int, int, int, int);
     bool pivot_out_of_bounds(int, int, int, int);
