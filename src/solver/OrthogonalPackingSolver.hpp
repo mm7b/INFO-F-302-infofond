@@ -97,6 +97,8 @@ struct OrthogonalPackingSolver : public Solver {
     int* dimension;
     int***** in_bounds;
 
+    bool carry(int a, int b, int c, int d, int e, int f, int k, int l);
+
     OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
     void add_constraints();

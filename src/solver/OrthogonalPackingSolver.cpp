@@ -302,7 +302,6 @@ void OrthogonalPackingSolver::add_constraints(){
 
     
     /* Initialisations */
-    int max_n_m = std::max(problem.n, problem.m);
     vec<Lit> lits;
 
     /* Initialisation des mu */
@@ -550,9 +549,9 @@ void OrthogonalPackingSolver::add_constraints(){
                         lits.push(~Lit(mu[k][a][b][c]));
                         for(int l = 0; l < problem.k; ++l){
                             if(k == l){ continue; }
-                            for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.lengths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
-                                for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.widths[k] && (e <= problem.n - problem.widths[l]); ++e){
-                                    if(c - problem.heights[l] > 0){
+                            for(int d = std::max(a - problem.lengths[l] + 1, 0); (d < a + problem.lengths[k]) && (d <= problem.m - problem.lengths[l]); ++d){ 
+                                for(int e = std::max(b - problem.widths[l] + 1, 0); (e < b + problem.widths[k]) && (e <= problem.n - problem.widths[l]); ++e){
+                                    if(c - problem.heights[l] >= 0){
                                         lits.push(Lit(mu[l][d][e][c - problem.heights[l]]));
                                     }
                                 }
