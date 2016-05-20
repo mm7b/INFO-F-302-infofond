@@ -550,14 +550,10 @@ void OrthogonalPackingSolver::add_constraints(){
                         lits.push(~Lit(mu[k][a][b][c]));
                         for(int l = 0; l < problem.k; ++l){
                             if(k == l){ continue; }
-                            for(int d = 0; d < problem.m; ++d){
-                                for(int e = 0; e < problem.n; ++e){
-                                    for(int f = 0; f < problem.h; ++f){
-                                        if(carry(a, b, c, d, e, f, k, l)){
-                                            /* mu[l][d][e][f] est porteur de mu[k][a][b][c] donc si 
-                                            mu[l][d][e][f] est valué à 1, mu[k][a][b][c] peut être à son tour valué à 1 */
-                                            lits.push(Lit(mu[l][d][e][f]));
-                                        }
+                            for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.lengths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
+                                for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.widths[k] && (e <= problem.n - problem.widths[l]); ++e){
+                                    if(c - problem.heights[l] > 0){
+                                        lits.push(Lit(mu[l][d][e][c - problem.heights[l]]));
                                     }
                                 }
                             }
@@ -568,46 +564,6 @@ void OrthogonalPackingSolver::add_constraints(){
             }
         }
     }
-}
-
-/* Inutile de vérifier a >= 0 ni b >= 0 ni c >= 0 car ce sont des indices donc >= 0 par définition */
-bool OrthogonalPackingSolver::out_of_bounds(int a, int b, int c, int k, int n, int m){
-    return !(  a + problem.lengths[k] <= m 
-            && b + problem.widths[k] <= n
-            && (problem.is_3d() ? c + problem.heights[k] <= problem.h : true));
-}
-
-bool OrthogonalPackingSolver::pivot_out_of_bounds(int a, int b, int c, int k){
-    return !(  a + problem.widths[k] <= problem.m 
-            && b + problem.lengths[k] <= problem.n
-            && (problem.is_3d() ? c + problem.heights[k] <= problem.h : true));
-}
-
-bool OrthogonalPackingSolver::overlapping(int a, int b, int c, int d, int e, int f, int k, int l){
-    return !(   a + problem.lengths[k] <= d
-            ||  a >= d + problem.lengths[l]
-            ||  b + problem.widths[k] <= e
-            ||  b >= e + problem.widths[l]
-            ||  (problem.is_3d() ? c + problem.heights[k] <= f : false)
-            ||  (problem.is_3d() ? c >= f + problem.widths[l] : false));
-}
-
-bool OrthogonalPackingSolver::pivot_overlapping(int a, int b, int c, int d, int e, int f, int k, int l){
-    return !(   a + problem.widths[k] <= d
-            ||  a >= d + problem.lengths[l]
-            ||  b + problem.lengths[k] <= e
-            ||  b >= e + problem.widths[l]
-            ||  (problem.is_3d() ? c + problem.heights[k] <= f : false)
-            ||  (problem.is_3d() ? c >= f + problem.widths[l] : false));
-}
-
-/* Renvoie vrai si (d, e, f) porte (a, b, c) càd si (a, b) et (d, e) sont superposés (en 2D) et f + hauteur == c */
-bool OrthogonalPackingSolver::carry(int a, int b, int c, int d, int e, int f, int k, int l){
-    return ((c == f + problem.heights[l]) &&
-            !(  a + problem.lengths[k] <= d
-            ||  a >= d + problem.lengths[l]
-            ||  b + problem.widths[k] <= e
-            ||  b >= e + problem.widths[l])); 
 }
 
 OrthogonalPackingSolution OrthogonalPackingSolver::get_solution(){

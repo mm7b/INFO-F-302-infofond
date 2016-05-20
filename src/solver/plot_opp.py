@@ -41,8 +41,8 @@ def plot_2D(k, n, m, mu, lengths, widths, color, alpha):
 def plot_3D(k, n, m, h, mu, lengths, widths, heights, color, alpha):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
-	ax.set_xlim(0, n)
-	ax.set_ylim(0, m)
+	ax.set_xlim(0, m)
+	ax.set_ylim(0, n)
 	ax.set_zlim(0, h)
 	ax.set_xlabel(X_LABEL)
 	ax.set_ylabel(Y_LABEL)

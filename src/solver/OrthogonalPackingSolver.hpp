@@ -97,12 +97,6 @@ struct OrthogonalPackingSolver : public Solver {
     int* dimension;
     int***** in_bounds;
 
-    bool out_of_bounds(int, int, int, int, int, int);
-    bool pivot_out_of_bounds(int, int, int, int);
-    bool overlapping(int, int, int, int, int, int, int, int);
-    bool pivot_overlapping(int, int, int, int, int, int, int, int);
-    bool carry(int, int, int, int, int, int, int, int);
-
     OrthogonalPackingSolver(const OrthogonalPackingProblem&);
 
     void add_constraints();
