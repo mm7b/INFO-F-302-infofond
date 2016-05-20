@@ -441,29 +441,22 @@ void OrthogonalPackingSolver::add_constraints(){
             for(int n_index = 0; n_index < problem.n - problem.min_n; ++n_index){
                 int n = n_index + problem.min_n;
                 /* in_bounds est faux si mu[k][a][b] est hors bornes */
-                for(int a = std::max(n - problem.lengths[k] + 1, 0); a < n; ++a){
-                    for(int b = 0; b < n; ++b){
+                for(int a = std::max(n - problem.lengths[k] + 1, 0); a < problem.m; ++a){
+                    for(int b = 0; b < problem.n; ++b){
                         addUnit(~Lit(in_bounds[k][a][b][0][n_index]));
                     }
                 }
-                for(int a = 0; a < n; ++a){
-                    for(int b = std::max(n - problem.widths[k] + 1, 0); b < n; ++b){
+                for(int a = 0; a < problem.m; ++a){
+                    for(int b = std::max(n - problem.widths[k] + 1, 0); b < problem.n; ++b){
                         addUnit(~Lit(in_bounds[k][a][b][0][n_index]));
-                    }
-                }
-                for(int a = 0; a < n; ++a){
-                    for(int b = 0; b < n; ++b){
-                        if(!out_of_bounds(a, b, 0, k, n, n)){
-                             addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
-                        }
                     }
                 }
                 /* si in_bounds est vrai, alors dimension[n] doit être vrai, càd qu'on accepte cette dimension */
-                // for(int a = 0; a < std::max(n - problem.lengths[k] + 1, 0); ++a){
-                //     for(int b = 0; b < std::max(n - problem.widths[k] + 1, 0); ++b){
-                //         addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
-                //     }
-                // }
+                for(int a = 0; a < std::max(n - problem.lengths[k] + 1, 0); ++a){
+                    for(int b = 0; b < std::max(n - problem.widths[k] + 1, 0); ++b){
+                        addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
+                    }
+                }
             }
         }
     }
