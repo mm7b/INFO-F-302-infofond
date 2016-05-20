@@ -300,8 +300,9 @@ OrthogonalPackingSolver::OrthogonalPackingSolver(const OrthogonalPackingProblem&
 
 void OrthogonalPackingSolver::add_constraints(){
 
+    
     /* Initialisations */
-
+    int max_n_m = std::max(problem.n, problem.m);
     vec<Lit> lits;
 
     /* Initialisation des mu */
@@ -372,43 +373,88 @@ void OrthogonalPackingSolver::add_constraints(){
     }
 
     /* (a, b, c) doit être dans les bornes du grand rectangle */
-    if(problem.orientation == FIX){
+    if(problem.orientation == PIVOT){
         for(int k = 0; k < problem.k; ++k){
-             for(int a = problem.m - problem.lengths[k] + 1; a < problem.m; ++a){
-                for(int b = problem.n - problem.widths[k] + 1; b < problem.n; ++b){
-                    for(int c = (problem.is_3d() ? problem.h - problem.heights[k] + 1 : 0); c < (problem.is_3d() ? problem.h : 1); ++c){
-                        if(problem.orientation == FIX){
-                        	if(problem.solution_type == SMALLEST){
-                        		lits.clear();
-                        		lits.push(~Lit(mu[k][a][b][c]));
-                        		for(int n = 0; n<problem.n-problem.min_n ; ++n){
-                        			if(out_of_bounds(a, b, c, k, n + problem.min_n, n + problem.min_n)){
-    									addUnit(~Lit(in_bounds[k][a][b][c][n]));
-                        			}else{
-    									addBinary(~Lit(in_bounds[k][a][b][c][n]), Lit(dimension[n]));
-    								}
-    								lits.push(Lit(in_bounds[k][a][b][c][n]));
-                        		}
-                        		addClause(lits);
-                        	}else{
-                            	if(out_of_bounds(a, b, c, k, problem.n, problem.m)){
-                                	addUnit(~Lit(mu[k][a][b][c]));
-                            	}
-                            }
-                        }
-                        else{
-                            bool out = out_of_bounds(a, b, c, k, problem.n, problem.m);
-                            bool pivot_out = pivot_out_of_bounds(a, b, c, k);
-                            if(out && pivot_out){
-                                addUnit(~Lit(mu[k][a][b][c]));
-                            }
-                            else if(!out && pivot_out){
-                                addBinary(~Lit(mu[k][a][b][c]), ~Lit(pivot[k]));
-                            }
-                            else if(out && !pivot_out){
-                                addBinary(~Lit(mu[k][a][b][c]), Lit(pivot[k])); 
-                            }
-                        }
+            /* Sans pivoter */
+            for(int a = std::max(problem.m - problem.lengths[k] + 1, 0); a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    addBinary(~Lit(mu[k][a][b][0]), Lit(pivot[k]));
+                }
+            }
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = std::max(problem.n - problem.widths[k] + 1, 0); b < problem.n; ++b){
+                    addBinary(~Lit(mu[k][a][b][0]), Lit(pivot[k]));
+                }
+            }
+            /* En pivotant */
+            for(int a = std::max(problem.m - problem.widths[k] + 1, 0); a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    addBinary(~Lit(mu[k][a][b][0]), ~Lit(pivot[k]));
+                }
+            }
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = std::max(problem.n - problem.lengths[k] + 1, 0); b < problem.n; ++b){
+                    addBinary(~Lit(mu[k][a][b][0]), ~Lit(pivot[k]));
+                }
+            }
+        }
+    }
+    else if(problem.is_3d()){
+        for(int k = 0; k < problem.k; ++k){
+            for(int a = std::max(problem.m - problem.lengths[k] + 1, 0); a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    for(int c = 0; c < problem.h; ++c){
+                        addUnit(~Lit(mu[k][a][b][c]));
+                    }
+                }
+            }
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = std::max(problem.n - problem.widths[k] + 1, 0); b < problem.n; ++b){
+                    for(int c = 0; c < problem.h; ++c){
+                        addUnit(~Lit(mu[k][a][b][c]));
+                    }
+                }
+            }
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    for(int c = std::max(problem.h - problem.heights[k] + 1, 0); c < problem.h; ++c){
+                        addUnit(~Lit(mu[k][a][b][c]));
+                    }
+                }
+            }
+        }
+    }
+    else if(problem.solution_type == SMALLEST){
+        for(int k = 0; k < problem.k; ++k){
+            /* mu[k][a][b] est vrai si on a au moins une dimension pour laquelle in_bounds est vrai */
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    lits.clear();
+                    lits.push(~Lit(mu[k][a][b][0]));
+                    for(int n_index = 0; n_index < problem.n - problem.min_n; ++n_index){
+                        lits.push(Lit(in_bounds[k][a][b][0][n_index]));
+                    }
+                    addClause(lits);
+                }
+            }
+            /* k est dans les bornes si on dimension[n] est vrai et in_bounds[k][a][b][n] est vrai */
+            for(int n_index = 0; n_index < problem.n - problem.min_n; ++n_index){
+                int n = n_index + problem.min_n;
+                /* in_bounds est faux si mu[k][a][b] est hors bornes */
+                for(int a = std::max(n - problem.lengths[k] + 1, 0); a < n; ++a){
+                    for(int b = 0; b < n; ++b){
+                        addUnit(~Lit(in_bounds[k][a][b][0][n_index]));
+                    }
+                }
+                for(int a = 0; a < n; ++a){
+                    for(int b = std::max(n - problem.widths[k] + 1, 0); b < n; ++b){
+                        addUnit(~Lit(in_bounds[k][a][b][0][n_index]));
+                    }
+                }
+                /* si in_bounds est vrai, alors dimension[n] doit être vrai, càd qu'on accepte cette dimension */
+                for(int a = 0; a < std::max(n - problem.lengths[k] + 1, 0); ++a){
+                    for(int b = 0; b < std::max(n - problem.widths[k] + 1, 0); ++b){
+                        addBinary(~Lit(in_bounds[k][a][b][0][n_index]), Lit(dimension[n_index]));
                     }
                 }
             }
@@ -416,22 +462,14 @@ void OrthogonalPackingSolver::add_constraints(){
     }
     else{
         for(int k = 0; k < problem.k; ++k){
-             for(int a = problem.m - problem.lengths[k] + 1; a < problem.m; ++a){
-                for(int b = problem.n - problem.widths[k] + 1; b < problem.n; ++b){
-                    for(int c = (problem.is_3d() ? problem.h - problem.heights[k] + 1 : 0); c < (problem.is_3d() ? problem.h : 1); ++c){
-                            bool out = out_of_bounds(a, b, c, k, problem.n, problem.m);
-                            bool pivot_out = pivot_out_of_bounds(a, b, c, k);
-                            if(out && pivot_out){
-                                addUnit(~Lit(mu[k][a][b][c]));
-                            }
-                            else if(!out && pivot_out){
-                                addBinary(~Lit(mu[k][a][b][c]), ~Lit(pivot[k]));
-                            }
-                            else if(out && !pivot_out){
-                                addBinary(~Lit(mu[k][a][b][c]), Lit(pivot[k])); 
-                            }
-                        }
-                    }
+             for(int a = std::max(problem.m - problem.lengths[k] + 1, 0); a < problem.m; ++a){
+                for(int b = 0; b < problem.n; ++b){
+                    addUnit(~Lit(mu[k][a][b][0]));
+                }
+            }
+            for(int a = 0; a < problem.m; ++a){
+                for(int b = std::max(problem.n - problem.widths[k] + 1, 0); b < problem.n; ++b){
+                    addUnit(~Lit(mu[k][a][b][0]));
                 }
             }
         }
@@ -460,22 +498,34 @@ void OrthogonalPackingSolver::add_constraints(){
     /* On peux essayer de pivoter en 2D */
     else{
         for(int k = 0; k < problem.k; ++k){
-            for(int a = 0; a <= problem.m - problem.lengths[k]; ++a){
-                for(int b = 0; b <= problem.n - problem.widths[k]; ++b){
-                    for(int l = k + 1; l < problem.k; ++l){
-                        if(problem.orientation == PIVOT){
+            if(problem.orientation == PIVOT){
+                for(int a = 0; a <= problem.m - problem.lengths[k], 0; ++a){
+                    for(int b = 0; b <= problem.n - problem.widths[k], 0; ++b){
+                        for(int l = k + 1; l < problem.k; ++l){
                             for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.lengths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
                                 for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.widths[k] && (e <= problem.n - problem.widths[l]); ++e){
                                     addTernary(~Lit(mu[k][a][b][0]), ~Lit(mu[l][d][e][0]), Lit(pivot[k]));
                                 }
                             }
-                            for(int d = std::max(b - problem.lengths[l] + 1, 0); d < b + problem.widths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
-                                for(int e = std::max(a - problem.widths[l] + 1, 0); e < a + problem.lengths[k] && (e <= problem.n - problem.widths[l]); ++e){
-                                    addTernary(~Lit(mu[k][b][a][0]), ~Lit(mu[l][d][e][0]), ~Lit(pivot[k]));
+                        }
+                    }
+                }
+                for(int a = 0; a <= problem.m - problem.widths[k]; ++a){
+                    for(int b = 0; b <= problem.n - problem.lengths[k]; ++b){
+                        for(int l = k + 1; l < problem.k; ++l){
+                            for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.widths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
+                                for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.lengths[k] && (e <= problem.n - problem.widths[l]); ++e){
+                                    addTernary(~Lit(mu[k][a][b][0]), ~Lit(mu[l][d][e][0]), ~Lit(pivot[k]));
                                 }
                             }
                         }
-                        else{
+                    }
+                }
+            }
+            else{
+                for(int a = 0; a <= std::max(problem.m - problem.lengths[k], 0); ++a){
+                    for(int b = 0; b <= std::max(problem.n - problem.widths[k]); ++b){
+                        for(int l = k + 1; l < problem.k; ++l){
                             for(int d = std::max(a - problem.lengths[l] + 1, 0); d < a + problem.lengths[k] && (d <= problem.m - problem.lengths[l]); ++d){ 
                                 for(int e = std::max(b - problem.widths[l] + 1, 0); e < b + problem.widths[k] && (e <= problem.n - problem.widths[l]); ++e){
                                     addBinary(~Lit(mu[k][a][b][0]), ~Lit(mu[l][d][e][0]));
@@ -487,6 +537,7 @@ void OrthogonalPackingSolver::add_constraints(){
             }
         }
     }
+
 
     /* Pas de parallélépipède flottant. c commence à 1 car pour c = 0 le rectangle ne flotte pas */
     if(problem.is_3d() && problem.height_constraint == NO_FLOAT){

@@ -13,8 +13,8 @@ warnings.filterwarnings("ignore")
 
 DEFAULT_COLOR = "b"
 DEFAULT_ALPHA = 0.4
-X_LABEL = "N"
-Y_LABEL = "M"
+X_LABEL = "M"
+Y_LABEL = "N"
 Z_LABEL = "H"
 
 def int_list(arg):
@@ -26,8 +26,8 @@ def coord_list(arg):
 def plot_2D(k, n, m, mu, lengths, widths, color, alpha):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, aspect="equal")
-	ax.set_xlim(0, n)
-	ax.set_ylim(0, m)
+	ax.set_xlim(0, m)
+	ax.set_ylim(0, n)
 	ax.set_xlabel(X_LABEL)
 	ax.set_ylabel(Y_LABEL)
 	for i in range(k):
