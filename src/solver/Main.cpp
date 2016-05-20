@@ -40,10 +40,10 @@ void orthogonal_packing(const OrthogonalPackingProblem& problem){
             previous_sol = current_sol;
             current_sol = solver.get_solution();
         }
-        std::cout << "Tiniest square size: " << minimum_square_size << std::endl;
+        std::cout << minimum_square_size << std::endl;
         n = minimum_square_size; m = minimum_square_size;
     }
-    std::cout << "Execution time : " << float(clock() - t0) / CLOCKS_PER_SEC << std::endl;
+    //std::cout << "Execution time : " << float(clock() - t0) / CLOCKS_PER_SEC << std::endl;
     previous_sol.print(std::cout);
     previous_sol.plot(n, m);
 }
