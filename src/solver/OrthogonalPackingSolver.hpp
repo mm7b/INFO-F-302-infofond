@@ -97,10 +97,6 @@ struct OrthogonalPackingSolver : public Solver {
     int* dimension;
     int***** in_bounds;
 
-    /* Binary encoding for exactly one constraint */
-    int* b_encoding;
-    std::bitset<BITSET_SIZE>*** binaries;
-
     bool out_of_bounds(int, int, int, int, int, int);
     bool pivot_out_of_bounds(int, int, int, int);
     bool overlapping(int, int, int, int, int, int, int, int);
